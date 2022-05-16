@@ -1,0 +1,31 @@
+{
+    "name": "codewiser/postie",
+    "description": "Subscription management Laravel package",
+    "keywords": ["subscription", "notifications", "laravel"],
+    "version": "1.0.0",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Michael Pogrebnikov",
+            "email": "pm@101media.ru"
+        }
+    ],
+    "require": {
+        "php": "^7.4|^8.0",
+        "laravel/framework": "^8.0|^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Codewiser\\Postie\\": "src"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Codewiser\\Postie\\PostieServiceProvider"
+            ]
+        }
+    }
+}

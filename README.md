@@ -1,2 +1,3 @@
-# postie
+# Postie
+
 Subscription Management Laravel Package
