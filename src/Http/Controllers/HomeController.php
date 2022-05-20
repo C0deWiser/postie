@@ -4,6 +4,7 @@ namespace Codewiser\Postie\Http\Controllers;
 
 use Codewiser\Postie\Contracts\PostieAssets;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Artisan;
 
 class HomeController extends Controller
 {
@@ -14,6 +15,12 @@ class HomeController extends Controller
      */
     public function index(PostieAssets $assets)
     {
+        // TODO: remove after development
+        Artisan::call('postie:publish', [
+
+        ]);
+
+
         return view('postie::layout', [
             'assetsAreCurrent' => $assets->assetsAreCurrent(),
             'cssFile' => 'app.css',

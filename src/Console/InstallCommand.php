@@ -37,6 +37,9 @@ class InstallCommand extends Command
         $this->comment('Publishing Postie Configuration...');
         $this->callSilent('vendor:publish', ['--tag' => 'postie-config']);
 
+        $this->comment('Publishing Postie Migrations...');
+        $this->callSilent('vendor:publish', ['--tag' => 'postie-migrations']);
+
         $this->registerPostieServiceProvider();
 
         $this->info('Postie scaffolding installed successfully.');

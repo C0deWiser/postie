@@ -5,7 +5,7 @@ use Codewiser\Postie\Http\Controllers\SubsController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('api')->group(function () {
-    Route::apiResource('subs', SubsController::class)->only('index');
+    Route::apiResource('subs', SubsController::class)->only(['index', 'update', 'store']);
 });
 
 // Catch-all Route...

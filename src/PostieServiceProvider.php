@@ -4,6 +4,8 @@ namespace Codewiser\Postie;
 
 use Codewiser\Postie\Console\InstallCommand;
 use Codewiser\Postie\Console\PublishCommand;
+use Codewiser\Postie\Contracts\Channelizationable;
+use Codewiser\Postie\Contracts\Postie;
 use Codewiser\Postie\Contracts\PostieAssets;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -39,6 +41,14 @@ class PostieServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/../config/postie.php', 'postie');
 
         $this->app->singleton(PostieAssets::class, function () {
+            return new PostieService();
+        });
+
+        $this->app->singleton(Postie::class, function () {
+            return new PostieService();
+        });
+
+        $this->app->singleton(PostieService::class, function () {
             return new PostieService();
         });
     }
@@ -107,6 +117,10 @@ class PostieServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../config/postie.php' => config_path('postie.php'),
             ], 'postie-config');
+
+            $this->publishes([
+                __DIR__.'/../database/migrations' => database_path('migrations'),
+            ], 'postie-migrations');
         }
     }
 
@@ -117,7 +131,8 @@ class PostieServiceProvider extends ServiceProvider
      */
     protected function registerCommands()
     {
-        if ($this->app->runningInConsole()) {
+        // TODO: uncomment after development
+//        if ($this->app->runningInConsole()) {
 
             $commands = [
                 InstallCommand::class,
@@ -125,6 +140,6 @@ class PostieServiceProvider extends ServiceProvider
             ];
 
             $this->commands($commands);
-        }
+//        }
     }
 }
