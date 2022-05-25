@@ -4,6 +4,7 @@ namespace Codewiser\Postie\Http\Controllers;
 
 use Codewiser\Postie\Contracts\Postie;
 use Codewiser\Postie\Contracts\PostieAssets;
+use Codewiser\Postie\PostieService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Artisan;
@@ -15,7 +16,7 @@ class HomeController extends Controller
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function index(Request $request, PostieAssets $assets, Postie $postie)
+    public function index(Request $request, PostieService $postie)
     {
         $possibleNotifications = $postie->getUserNotifications($request->user());
 
@@ -24,10 +25,10 @@ class HomeController extends Controller
         }
 
         return view('postie::layout', [
-            'assetsAreCurrent' => $assets->assetsAreCurrent(),
+            'assetsAreCurrent' => $postie->assetsAreCurrent(),
             'cssFile' => 'app.css',
             'cssBootstrapIcons' => 'bootstrap-icons.css',
-            'postieScriptVariables' => $assets->scriptVariables(),
+            'postieScriptVariables' => $postie->scriptVariables(),
             'isDownForMaintenance' => App::isDownForMaintenance(),
         ]);
     }

@@ -29,16 +29,18 @@ interface Postie
 
     /**
      * Get notifications available to given notifiable.
+     * 
+     * @param mixed $notifiable
      */
-    public function getUserNotifications(Model $notifiable): array;
+    public function getUserNotifications($notifiable): array;
 
     /**
      * Save user preferences.
      *
-     * @param Model $notifiable
+     * @param mixed $notifiable
      * @param string $notification
      * @param array $channels Channels preferences (['mail' => true])
      * @return Subscription
      */
-    public function toggleUserNotificationChannels(Model $notifiable, string $notification, array $channels): Subscription;
+    public function toggleUserNotificationChannels($notifiable, string $notification, array $channels): Subscription;
 }

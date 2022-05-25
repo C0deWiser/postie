@@ -39,11 +39,7 @@ class PostieServiceProvider extends ServiceProvider
         }
 
         $this->mergeConfigFrom(__DIR__ . '/../config/postie.php', 'postie');
-
-        $this->app->singleton(PostieAssets::class, function () {
-            return new PostieService();
-        });
-
+        
         $this->app->singleton(Postie::class, function () {
             return new PostieService();
         });

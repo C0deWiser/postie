@@ -2,6 +2,7 @@
 
 namespace Codewiser\Postie\Models;
 
+use Codewiser\Postie\Collections\SubscriptionCollection;
 use Codewiser\Postie\Contracts\Postie;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -27,6 +28,11 @@ class Subscription extends Model
     public function notifiable(): MorphTo
     {
         return $this->morphTo();
+    }
+    
+    public function newCollection(array $models = []): SubscriptionCollection
+    {
+        return new SubscriptionCollection($models);
     }
 
     /**

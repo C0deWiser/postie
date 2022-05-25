@@ -2,6 +2,8 @@
 
 namespace Codewiser\Postie\Collections;
 
+use Codewiser\Postie\ChannelDefinition;
+use Codewiser\Postie\Models\Subscription;
 use Codewiser\Postie\NotificationDefinition;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -14,9 +16,20 @@ class NotificationCollection extends Collection
     public function find(string $notification):?NotificationDefinition
     {
         return $this
-            ->first(function (NotificationDefinition $definition) use ($notification) {
+            ->sole(function (NotificationDefinition $definition) use ($notification) {
             return $definition->getClassName() === $notification;
         });
+    }
+
+    /**
+     * Find notification definition by index of definition.
+     */
+    public function findByIndex(int $searchIndex):?NotificationDefinition
+    {
+        return $this
+            ->sole(function (NotificationDefinition $definition, $index) use ($searchIndex) {
+                return $index === $searchIndex;
+            });
     }
 
     /**
@@ -40,5 +53,27 @@ class NotificationCollection extends Collection
             ->filter(function (NotificationDefinition $notificationDefinition) use ($notifiable) {
                 return (bool)$notificationDefinition->getAudienceBuilder()->find($notifiable->getKey());
             });
+    }
+
+    /**
+     * Build User Notifications with channel statuses
+     */
+    public function buildUserNotificationsWithChannelStatuses(SubscriptionCollection $subscriptions): array
+    {
+        $result = [];
+        /** @var NotificationDefinition $notificationDefinition */
+        foreach ($this as $notificationDefinition) {
+            $row = [];
+            $row['notification'] = $notificationDefinition->getClassName();
+            $row['title'] = $notificationDefinition->getTitle();
+
+            $subscription = $subscriptions->firstByNotification($notificationDefinition->getClassName());
+
+            $row['channels'] = $notificationDefinition->getChannels()->getResolvedByNotifiableSubscription($subscription);
+
+            $result[] = $row;
+        }
+
+        return $result;
     }
 }

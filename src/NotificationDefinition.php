@@ -3,6 +3,7 @@
 namespace Codewiser\Postie;
 
 use Closure;
+use Codewiser\Postie\Collections\ChannelCollection;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
@@ -54,11 +55,11 @@ class NotificationDefinition implements Arrayable
     /**
      * Get notification available channels.
      *
-     * @return Collection<ChannelDefinition>
+     * @return ChannelCollection
      */
-    public function getChannels(): Collection
+    public function getChannels(): ChannelCollection
     {
-        return collect($this->channels);
+        return ChannelCollection::make($this->channels);
     }
 
     /**

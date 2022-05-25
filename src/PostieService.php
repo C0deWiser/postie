@@ -12,7 +12,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 
-class PostieService implements PostieAssets, Postie
+class PostieService implements Postie
 {
     /**
      * @var array<NotificationDefinition>
@@ -53,10 +53,6 @@ class PostieService implements PostieAssets, Postie
     {
         $notificationDefinition = $this->getNotifications()->find($notification);
 
-        if (!$notificationDefinition) {
-            return [];
-        }
-
         /** @var Subscription $subscription */
         $subscription = Subscription::for($notifiable, $notification)->first();
         $userChannels = $subscription ? $subscription->channels : [];
@@ -84,60 +80,19 @@ class PostieService implements PostieAssets, Postie
         });
     }
 
-    public function getUserNotifications(Model $notifiable): array
+    public function getUserNotifications($notifiable): array
     {
-        // Filter notifications relevant to notifiable
-        $notificationDefinitions = $this->getNotifications()->for($notifiable);
+        $userNotificationDefinitions = $this->getNotifications()->for($notifiable);
 
-        // Get notifications properties
-        $userNotifications = $notificationDefinitions
-            ->map(function (NotificationDefinition $notificationDefinition) {
-                return $notificationDefinition->getClassName();
-            })
-            ->toArray();
-
-        $subscriptions = Subscription::for($notifiable, $userNotifications)->get()
+        // Get user notifications
+        $subscriptions = Subscription::for($notifiable, $userNotificationDefinitions->classNames())
+            ->get()
             ->keyBy('notification');
-
-        $result = [];
-
-        /** @var NotificationDefinition $notificationDefinition */
-        foreach ($notificationDefinitions as $notificationDefinition) {
-            $row = [];
-            $row['notification'] = $notificationDefinition->getClassName();
-            $row['title'] = $notificationDefinition->getTitle();
-
-            $channels = [];
-            /** @var ChannelDefinition $channelDefinition */
-            foreach ($notificationDefinition->getChannels() as $channelDefinition) {
-                $currentChannel = $channelDefinition->toArray();
-
-                $userChannelStatus = null;
-
-                if (isset($subscriptions[$notificationDefinition->getClassName()])) {
-                    // Если у пользователя есть записи о подписке на данное оповещение
-                    $userSubscription = $subscriptions[$notificationDefinition->getClassName()];
-                    $currentChannelName = $channelDefinition->getName();
-
-                    if (isset($userSubscription->channels[$currentChannelName])) {
-                        // Если в данной записи определен текущий канал оповещения
-                        $userChannelStatus = $userSubscription->channels[$currentChannelName];
-                    }
-                }
-
-                $currentChannel['status'] = $channelDefinition->getStatus($userChannelStatus);
-                $channels[] = $currentChannel;
-            }
-
-            $row['channels'] = $channels;
-
-            $result[] = $row;
-        }
-
-        return $result;
+        
+        return $userNotificationDefinitions->buildUserNotificationsWithChannelStatuses($subscriptions);
     }
 
-    public function toggleUserNotificationChannels(Model $notifiable, string $notification, array $channels): Subscription
+    public function toggleUserNotificationChannels($notifiable, string $notification, array $channels): Subscription
     {
         /** @var Subscription $subscription */
         $subscription = Subscription::for($notifiable, $notification)->first();
@@ -145,17 +100,17 @@ class PostieService implements PostieAssets, Postie
         if ($subscription) {
             // Update preferences
             $subscription->channels = $this
-                ->getNotifications()->find($notification)
-                // todo null?
+                ->getNotifications()
+                ->find($notification)
                 ->getUserChannels(array_merge($subscription->channels, $channels));
         } else {
             // Create preferences
             $subscription = new Subscription;
-            $subscription->morphTo()->associate($notifiable);
+            $subscription->notifiable()->associate($notifiable);
             $subscription->notification = $notification;
             $subscription->channels = $this
-                ->getNotifications()->find($notification)
-                // todo null?
+                ->getNotifications()
+                ->find($notification)
                 ->getUserChannels($channels);
         }
         $subscription->save();
