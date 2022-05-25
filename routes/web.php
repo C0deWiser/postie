@@ -1,11 +1,12 @@
 <?php
 
 use Codewiser\Postie\Http\Controllers\HomeController;
-use Codewiser\Postie\Http\Controllers\SubsController;
+use Codewiser\Postie\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('api')->group(function () {
-    Route::apiResource('subs', SubsController::class)->only(['index', 'update', 'store']);
+    Route::post('subscriptions/toggle', [SubscriptionController::class, 'toggle'])->name('.subscriptions.toggle');
+    Route::apiResource('subscriptions', SubscriptionController::class)->only(['index']);
 });
 
 // Catch-all Route...

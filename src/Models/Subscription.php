@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Правило оповещения пользователя о событии на сайте
  *
  * @property integer $id ID
+ * @property integer $user_id ID Пользователя
  * @property array $channels Массив каналов
  * @property string $notification Оповещение
  *

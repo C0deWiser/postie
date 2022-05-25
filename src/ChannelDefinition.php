@@ -162,6 +162,20 @@ class ChannelDefinition implements Arrayable
         return $this;
     }
 
+    /**
+     * Вычисляемое значение статуса канала оповещения
+     *
+     * @return bool
+     */
+    public function getStatus(bool $userChannelStatus = null): bool
+    {
+        if ($this->forced || is_null($userChannelStatus)) {
+            return $this->default;
+        }
+
+        return $userChannelStatus;
+    }
+
     public function toArray()
     {
         return [

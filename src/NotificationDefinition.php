@@ -129,12 +129,27 @@ class NotificationDefinition implements Arrayable
                 $channelDefinition->getForced()
                     ? $channelDefinition->getDefault()
                     : (
-                        count($userChannels) && array_key_exists($channelDefinition->getName(), $userChannels)
-                            ? $userChannels[$channelDefinition->getName()]
-                            : $channelDefinition->getDefault()
-                        );
+                count($userChannels) && array_key_exists($channelDefinition->getName(), $userChannels)
+                    ? $userChannels[$channelDefinition->getName()]
+                    : $channelDefinition->getDefault()
+                );
         });
         return $result;
+    }
+
+    /**
+     * Возвращает массив имен каналов
+     *
+     * @return array
+     */
+    public function getChannelNames(): array
+    {
+        return $this
+            ->getChannels()
+            ->map(function (ChannelDefinition $channelDefinition) {
+                return $channelDefinition->getName();
+            })
+            ->toArray();
     }
 
 

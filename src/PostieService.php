@@ -6,7 +6,10 @@ use Codewiser\Postie\Contracts\Channelizationable;
 use Codewiser\Postie\Contracts\Postie;
 use Codewiser\Postie\Contracts\PostieAssets;
 use Codewiser\Postie\Models\Contracts\Subscriptionable;
+use Codewiser\Postie\Models\Subscription;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 
 class PostieService implements PostieAssets, Postie
@@ -78,4 +81,97 @@ class PostieService implements PostieAssets, Postie
         return $activeChannels;
     }
 
+    public function getNotificationNames(): array
+    {
+        return $this
+            ->notificationDefinitions()
+            ->map(function (NotificationDefinition $notificationDefinition) {
+                return $notificationDefinition->getNotification();
+            })
+            ->toArray();
+    }
+
+    public function getUserNotifications(int $userId): array
+    {
+        // Отбираем определения оповещений, в которых есть пользователь
+        $notificationDefinitions = $this
+            ->notificationDefinitions()
+            ->filter(function (NotificationDefinition $notificationDefinition) use ($userId) {
+                $existedUserInQuery = $notificationDefinition->getAudienceBuilder()->find($userId);
+                return $existedUserInQuery ? true : false;
+            });
+        
+        // Получаем массив свойств notification из массива определений
+        $userNotifications = $notificationDefinitions->map(function (NotificationDefinition $notificationDefinition) {
+            return $notificationDefinition->getNotification();
+        })->toArray();
+
+        $userSubscriptions = Subscription::query()
+            ->where('user_id', $userId)
+            ->whereIn('notification', $userNotifications)
+            ->get()
+            ->keyBy('notification');
+
+        $result = [];
+        foreach ($notificationDefinitions as $notificationDefinition) {
+            $row = [];
+            $row['notification'] = $notificationDefinition->getNotification();
+            $row['title'] = $notificationDefinition->getTitle();
+
+            $channels = [];
+            foreach ($notificationDefinition->getChannels() as $channelDefinition) {
+                $currentChannel = $channelDefinition->toArray();
+
+                $userChannelStatus = null;
+
+                if (isset($userSubscriptions[$notificationDefinition->getNotification()])) {
+                    // Если у пользователя есть записи о подписке на данное оповещение
+                    $userSubscription = $userSubscriptions[$notificationDefinition->getNotification()];
+                    $currentChannelName = $channelDefinition->getName();
+
+                    if (isset($userSubscription->channels[$currentChannelName])) {
+                        // Если в данной записи определен текущий канал оповещения
+                        $userChannelStatus = $userSubscription->channels[$currentChannelName];
+                    }
+                }
+
+                $currentChannel['status'] = $channelDefinition->getStatus($userChannelStatus);
+                $channels[] = $currentChannel;
+            }
+
+            $row['channels'] = $channels;
+
+            $result[] = $row;
+        }
+
+        return $result;
+    }
+
+    public function toggleUserNotificationChannels(int $userId, string $notification, array $channels): Subscription
+    {
+        $subscription = Subscription::query()
+            ->where('notification', $notification)
+            ->where('user_id', $userId)
+            ->first();
+
+        if ($subscription) {
+            // Обновление записи о подписке
+            $data['channels'] = $this
+                ->findNotificationDefinitionByNotification($notification)
+                ->getActualChannelsWithStatus(array_merge($subscription->channels, $channels));
+            $subscription->update($data);
+        } else {
+            // Создание записи о подписке
+            $data = [
+                'user_id' => $userId,
+                'notification' => $notification,
+                'channels' => $this
+                    ->findNotificationDefinitionByNotification($notification)
+                    ->getActualChannelsWithStatus($channels),
+            ];
+            $subscription = Subscription::query()->create($data);
+        }
+
+        return $subscription;
+    }
 }

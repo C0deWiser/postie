@@ -17,13 +17,15 @@ class HomeController extends Controller
     {
         // TODO: remove after development
         Artisan::call('postie:publish', [
-
+//            '--tag' => 'postie-assets',
+//            '--force' => true,
         ]);
 
 
         return view('postie::layout', [
             'assetsAreCurrent' => $assets->assetsAreCurrent(),
             'cssFile' => 'app.css',
+            'cssBootstrapIcons' => 'bootstrap-icons.css',
             'postieScriptVariables' => $assets->scriptVariables(),
             'isDownForMaintenance' => App::isDownForMaintenance(),
         ]);

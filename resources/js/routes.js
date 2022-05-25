@@ -1,10 +1,10 @@
 export default [
-    { path: '/', redirect: '/subs' },
+    { path: '/', redirect: '/subscriptions' },
 
     {
-        path: '/subs',
-        name: 'subs',
-        component: require('./screens/subs/index').default,
+        path: '/subscriptions',
+        name: 'subscriptions',
+        component: require('./screens/subscriptions/index').default,
     },
 
 ];

@@ -26,6 +26,10 @@ mix.options({
     .js('resources/js/app.js', 'public')
     .vue()
     .sass('resources/sass/app.scss', 'public')
+    .sass('node_modules/bootstrap-icons/font/bootstrap-icons.scss', 'public')
+    .options({
+        resourceRoot: '/vendor/postie'
+    })
     // .sass('resources/sass/app-dark.scss', 'public')
     .version()
     .copy('resources/img', 'public')
