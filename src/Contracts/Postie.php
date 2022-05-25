@@ -5,6 +5,8 @@ namespace Codewiser\Postie\Contracts;
 use Codewiser\Postie\Models\Contracts\Subscriptionable;
 use Codewiser\Postie\Models\Subscription;
 use Codewiser\Postie\NotificationDefinition;
+use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 
 interface Postie
@@ -26,7 +28,7 @@ interface Postie
 
     /**
      * @param string $notification
-     * @param mixed $notifiable
+     * @param Notifiable|AnonymousNotifiable $notifiable
      * @return array
      */
     public function via(string $notification, $notifiable): array;

@@ -78,6 +78,11 @@ class PostieService implements PostieAssets, Postie
         }, ARRAY_FILTER_USE_BOTH);
         $activeChannels = array_keys($actualChannels);
 
+        // Проверяем доступность адреса доставки по каждому каналу
+        $activeChannels = array_filter($activeChannels, function ($channel) use ($notifiable) {
+            return $notifiable->routeNotificationFor($channel) ? true : false;
+        });
+
         return $activeChannels;
     }
 
