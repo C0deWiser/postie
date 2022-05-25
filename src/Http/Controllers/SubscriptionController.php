@@ -19,7 +19,7 @@ class SubscriptionController extends Controller
      */
     public function index(Request $request, Postie $postie)
     {
-        $notificationDefinitions = $postie->getUserNotifications($request->user()->getKey());
+        $notificationDefinitions = $postie->getUserNotifications($request->user());
         return response()->json([
             'notification_definitions' => $notificationDefinitions,
         ]);
@@ -34,7 +34,7 @@ class SubscriptionController extends Controller
      */
     public function toggle(SubscriptionToggleRequest $request, Postie $postie)
     {
-        $subscription = $postie->toggleUserNotificationChannels($request->user()->getKey(), $request->notification, $request->channels);
+        $subscription = $postie->toggleUserNotificationChannels($request->user(), $request->notification, $request->channels);
         return SubscriptionResource::make($subscription);
     }
 }

@@ -15,11 +15,12 @@ class CreateSubscriptionsTable extends Migration
     {
         Schema::create('subscriptions', function (Blueprint $table) {
             $table->id();
-            $table->integer('user_id', false, true)->comment('Пользователь');
-            $table->string('notification')->comment('Событие');
-            $table->unique(['user_id', 'notification']);
-            $table->json('channels')->comment('Каналы оповещения');
+            $table->morphs('notifiable');
+            $table->string('notification');
+            $table->json('channels');
             $table->timestamps();
+
+            $table->unique(['notifiable_type', 'notifiable_id', 'notification']);
         });
     }
 

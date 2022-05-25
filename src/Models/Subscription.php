@@ -2,62 +2,50 @@
 
 namespace Codewiser\Postie\Models;
 
-use App\Models\User;
-use Codewiser\Postie\ChannelDefinition;
 use Codewiser\Postie\Contracts\Postie;
-use Codewiser\Postie\Models\Contracts\Subscriptionable;
-use Illuminate\Contracts\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
- * Правило оповещения пользователя о событии на сайте
+ * User subscriptions preferences.
  *
- * @property integer $id ID
- * @property integer $user_id ID Пользователя
- * @property array $channels Массив каналов
- * @property string $notification Оповещение
- *
- * @property-read array $resolved_channels Разрезолвенный массив каналов исходя из определений
+ * @property integer $id
+ * @property-read Model $notifiable Notifiable.
+ * @property array $channels Notifiable preferred channels.
+ * @property string $notification Notification class name.
  */
 class Subscription extends Model
 {
-    // Разрешаем полный Mass Assignment
+    // Allow Mass Assignment
     protected $guarded = [];
-
-//    protected $fillable = [
-//        'user_id',
-//        'notification',
-//        'channels',
-//    ];
 
     protected $casts = [
         'channels' => 'array',
     ];
 
-    /**
-     * Геттер актуального массива использования каналов исходя из определения оповещений
-     * @return array
-     */
-    public function getResolvedChannelsAttribute()
+    public function notifiable(): MorphTo
     {
-        /** @var Postie $postie */
-        $postie = app()->call(function (Postie $postie) {
-            return $postie;
-        });
-        $notificationDefinition = $postie->findNotificationDefinitionByNotification($this->notification);
+        return $this->morphTo();
+    }
 
-        $result = [];
-        foreach ($notificationDefinition->getChannels() as $channel) {
-            $result[$channel->getName()] =
-                $channel->getForced()
-                    ? $channel->getDefault()
-                    : (
-                        count($this->channels) && array_key_exists($channel->getName(), $this->channels)
-                            ? $this->channels[$channel->getName()]
-                            : $channel->getDefault()
-                        );
+    /**
+     * Get builder with notifiable subscriptions.
+     */
+    public static function for(Model $notifiable, $notification = null): Builder
+    {
+        $builder = static::query()
+            ->whereMorphedTo('notifiable', $notifiable);
+
+        if ($notification) {
+            if (is_array($notification)) {
+                $builder->whereIn('notification', $notification);
+            }
+            if (is_string($notification)) {
+                $builder->where('notification', $notification);
+            }
         }
-        return $result;
+
+        return $builder;
     }
 }

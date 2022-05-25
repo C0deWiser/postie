@@ -2,43 +2,49 @@
 
 namespace Codewiser\Postie;
 
+use Closure;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
-/**
- * Определение оповещения
- */
 class NotificationDefinition implements Arrayable
 {
-    protected string $notification;
-    protected \Closure $audienceBuilder;
+    protected string $class_name;
+    protected Closure $audienceBuilder;
     protected array $channels;
     protected string $title;
 
+    /**
+     * Make definition using notification class name.
+     *
+     * @param string $notification
+     * @return NotificationDefinition
+     */
     public static function make(string $notification): NotificationDefinition
     {
         return new static($notification);
     }
 
+    /**
+     * @param string $notification notification class name.
+     */
     public function __construct(string $notification)
     {
-        $this->notification = $notification;
+        $this->class_name = $notification;
         $this->title = (string)Str::of(class_basename($notification))->snake()->studly();
     }
 
     /**
-     * Оповещение
+     * Get notification class name.
      */
-    public function getNotification(): string
+    public function getClassName(): string
     {
-        return $this->notification;
+        return $this->class_name;
     }
 
     /**
-     * Builder аудитории получающей оповещения
-     * @return Builder
+     * Get Builder that holds notification audience.
      */
     public function getAudienceBuilder(): Builder
     {
@@ -46,8 +52,9 @@ class NotificationDefinition implements Arrayable
     }
 
     /**
-     * Массив определений каналов оповещения
-     * @return array|ChannelDefinition[]
+     * Get notification available channels.
+     *
+     * @return Collection<ChannelDefinition>
      */
     public function getChannels(): Collection
     {
@@ -55,32 +62,24 @@ class NotificationDefinition implements Arrayable
     }
 
     /**
-     * Отображаемое название оповещения
-     * @return string
+     * Get notification description.
      */
     public function getTitle(): string
     {
         return $this->title;
     }
 
-
     /**
-     * Установка builder'а для аудитории получателей оповещения
-     *
-     * @param \Closure $builder
-     * @return $this
+     * Define Builder that holds notification possible audience. Closure should return Eloquent Builder.
      */
-    public function audienceBuilder(\Closure $audienceBuilder): self
+    public function audience(Closure $audienceBuilder): self
     {
         $this->audienceBuilder = $audienceBuilder;
         return $this;
     }
 
     /**
-     * Установка отображаемого названия оповещения
-     *
-     * @param string $title Название
-     * @return $this
+     * Set notification human readable description.
      */
     public function title(string $title): self
     {
@@ -89,8 +88,9 @@ class NotificationDefinition implements Arrayable
     }
 
     /**
-     * Установка массива определений каналов
-     * @param array|ChannelDefinition[] $channels Массив определений каналов
+     * Set notification available channels.
+     *
+     * @param array<ChannelDefinition> $channels
      * @return $this
      */
     public function channels(array $channels): self
@@ -99,10 +99,10 @@ class NotificationDefinition implements Arrayable
         return $this;
     }
 
-    public function toArray()
+    public function toArray(): array
     {
         return [
-            'notification' => $this->notification,
+            'notification' => $this->class_name,
             'title' => $this->title,
             'channels' => $this->getChannels()->toArray(),
         ];
@@ -110,77 +110,33 @@ class NotificationDefinition implements Arrayable
 
 
     /**
-     * Возвращает массив актуальный массив каналов исходя из настроек и записи каналов подписки пользователя
-     *
-     * @param array $userChannels Каналы пользователя (из записи БД)
-     * @return array
+     * Get notification channels using user preferences.
      */
-    public function getActualChannelsWithStatus(array $userChannels = [], bool $withHidden = true): array
+    public function getUserChannels(array $userChannels = []): array
     {
-
-        $result = [];
-        $this->getChannels()->each(function (ChannelDefinition $channelDefinition) use ($userChannels, $withHidden, &$result) {
-            // Если скрытые каналы не нужно показаывать, то и не показываем
-            if (!$withHidden && $channelDefinition->getHidden()) {
-                return false;
-            }
-
-            $result[$channelDefinition->getName()] =
-                $channelDefinition->getForced()
-                    ? $channelDefinition->getDefault()
-                    : (
-                count($userChannels) && array_key_exists($channelDefinition->getName(), $userChannels)
-                    ? $userChannels[$channelDefinition->getName()]
-                    : $channelDefinition->getDefault()
-                );
-        });
-        return $result;
-    }
-
-    /**
-     * Возвращает массив имен каналов
-     *
-     * @return array
-     */
-    public function getChannelNames(): array
-    {
-        return $this
-            ->getChannels()
-            ->map(function (ChannelDefinition $channelDefinition) {
-                return $channelDefinition->getName();
+        return $this->getChannels()
+            ->mapWithKeys(function (ChannelDefinition $channelDefinition) use ($userChannels) {
+                return [
+                    $channelDefinition->getName() => $channelDefinition->getForced()
+                        ? $channelDefinition->getDefault()
+                        : (array_key_exists($channelDefinition->getName(), $userChannels)
+                            ? $userChannels[$channelDefinition->getName()]
+                            : $channelDefinition->getDefault()
+                        )
+                ];
             })
             ->toArray();
     }
 
-
     /**
-     * Возвращает массив каналов для фронтенда
-     * @return array
+     * Get notification channels names.
      */
-    public function getFrontendChannels(): array
+    public function getChannelNames(): array
     {
-        $result = [];
-        foreach ($this->channels as $channel) {
-            if (!$channel->hidden) {
-                $result[] = [
-                    'name' => $channel->name,
-                    'title' => $channel->title,
-                    'icon' => $channel->icon,
-                ];
-            }
-        }
-        return $result;
-    }
-
-
-    /**
-     * Возвращает название класса оповещения без namespace'а
-     *
-     * @return string
-     */
-    public function getNotificationClassNameWithoutNamespace(): string
-    {
-        $path = explode('\\', $this->notification);
-        return array_pop($path);
+        return $this->getChannels()
+            ->map(function (ChannelDefinition $channelDefinition) {
+                return $channelDefinition->getName();
+            })
+            ->toArray();
     }
 }

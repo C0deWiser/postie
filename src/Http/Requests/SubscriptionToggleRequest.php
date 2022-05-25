@@ -10,48 +10,39 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Subscription Store Request
+ * Subscription Store Request.
  *
- * @property-read string $notification Название оповещения
- * @property-read array $channels Каналы оповещения
- *
+ * @property-read string $notification Notification class name.
+ * @property-read array $channels User preferences.
  */
 class SubscriptionToggleRequest extends FormRequest
 {
-    /**
-     * Правила валидации
-     *
-     * @param PostieService $postieService
-     * @return array
-     */
     public function rules(Postie $postie)
     {
         return [
                 'notification' => [
                     'required',
                     'string',
-                    Rule::in($postie->getNotificationNames()),
+                    Rule::in($postie->getNotifications()->classNames()),
                 ],
             ] + $this->getChannelRules($postie);
     }
 
-    /**
-     * Массив правил валидации для каналов
-     *
-     * @return array
-     */
     public function getChannelRules(Postie $postie): array
     {
         $channelRules = [
             'channels' => ['required', 'array'],
         ];
 
-        $notificationDefinition = $postie->findNotificationDefinitionByNotification($this->notification);
+        $definition = $postie->getNotifications()->find($this->notification);
 
-        foreach ($notificationDefinition->getChannelNames() as $channelName) {
-            $key = 'channels.' . $channelName;
-            $channelRules[$key] = ['boolean'];
+        if ($definition) {
+            foreach ($definition->getChannelNames() as $channelName) {
+                $key = 'channels.' . $channelName;
+                $channelRules[$key] = ['boolean'];
+            }
         }
+
         return $channelRules;
     }
 }

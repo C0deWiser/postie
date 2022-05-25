@@ -2,7 +2,9 @@
 
 namespace Codewiser\Postie\Http\Controllers;
 
+use Codewiser\Postie\Contracts\Postie;
 use Codewiser\Postie\Contracts\PostieAssets;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Artisan;
 
@@ -13,14 +15,13 @@ class HomeController extends Controller
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function index(PostieAssets $assets)
+    public function index(Request $request, PostieAssets $assets, Postie $postie)
     {
-        // TODO: remove after development
-        Artisan::call('postie:publish', [
-//            '--tag' => 'postie-assets',
-//            '--force' => true,
-        ]);
+        $possibleNotifications = $postie->getUserNotifications($request->user());
 
+        if (!$possibleNotifications) {
+            abort(404);
+        }
 
         return view('postie::layout', [
             'assetsAreCurrent' => $assets->assetsAreCurrent(),

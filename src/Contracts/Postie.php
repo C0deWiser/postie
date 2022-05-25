@@ -2,58 +2,43 @@
 
 namespace Codewiser\Postie\Contracts;
 
-use Codewiser\Postie\Models\Contracts\Subscriptionable;
+use Codewiser\Postie\Collections\NotificationCollection;
 use Codewiser\Postie\Models\Subscription;
 use Codewiser\Postie\NotificationDefinition;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Collection;
 
 interface Postie
 {
     /**
-     * Массив определений оповещений
+     * Get collection of notification definitions.
      *
-     * @return Collection|NotificationDefinition[]
+     * @return NotificationCollection
      */
-    public function notificationDefinitions(): Collection;
+    public function getNotifications(): NotificationCollection;
 
     /**
-     * Попытка найти определение оповещения по его индексу
+     * Get notification channels based on notifiable preferences.
      *
-     * @param string $notification Оповещение
-     * @return NotificationDefinition|null
-     */
-    public function findNotificationDefinitionByNotification(string $notification): ?NotificationDefinition;
-
-    /**
      * @param string $notification
-     * @param Notifiable|AnonymousNotifiable $notifiable
+     * @param mixed $notifiable
      * @return array
      */
     public function via(string $notification, $notifiable): array;
 
     /**
-     * Возвращает массив имен определнных оповещений
-     *
-     * @return array
+     * Get notifications available to given notifiable.
      */
-    public function getNotificationNames(): array;
+    public function getUserNotifications(Model $notifiable): array;
 
     /**
-     * Возвращает массив оповещений пользователя с актуальным массивом каналов оповещения
-     * 
-     * @return array
-     */
-    public function getUserNotifications(int $userId): array;
-
-    /**
-     * Установить статусы каналов оповещения пользователя
+     * Save user preferences.
      *
-     * @param int $userId ID Пользователя
-     * @param string $notification Оповещение
-     * @param array $channels Массив каналов со статусами (['mail' => true])
-     * @return Subscription Модель правила оповещения
+     * @param Model $notifiable
+     * @param string $notification
+     * @param array $channels Channels preferences (['mail' => true])
+     * @return Subscription
      */
-    public function toggleUserNotificationChannels(int $userId, string $notification, array $channels): Subscription;
+    public function toggleUserNotificationChannels(Model $notifiable, string $notification, array $channels): Subscription;
 }

@@ -5,9 +5,6 @@ namespace Codewiser\Postie;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Str;
 
-/**
- * Определение канала оповещения
- */
 class ChannelDefinition implements Arrayable
 {
     protected string $name;
@@ -18,16 +15,16 @@ class ChannelDefinition implements Arrayable
     protected string $icon;
 
     /**
-     * Стартовый метод идентификации канала
-     *
-     * @param string $name Индекс канала (значение, которое используется в массиве via оповещений)
-     * @return ChannelDefinition
+     * Make definition with channel name.
      */
     public static function make(string $name): ChannelDefinition
     {
         return new static($name);
     }
 
+    /**
+     * @param string $name Channel name.
+     */
     public function __construct(string $name)
     {
         $this->name = $name;
@@ -47,8 +44,7 @@ class ChannelDefinition implements Arrayable
     }
 
     /**
-     * Имя канала (для массива via в оповещении)
-     * @return string
+     * Get channel name.
      */
     public function getName(): string
     {
@@ -56,8 +52,7 @@ class ChannelDefinition implements Arrayable
     }
 
     /**
-     * Отображаемое название канала
-     * @return string
+     * Get channel human readable title.
      */
     public function getTitle(): string
     {
@@ -65,8 +60,7 @@ class ChannelDefinition implements Arrayable
     }
 
     /**
-     * Дефолтное значение флага используемости канала
-     * @return bool
+     * Check if channel enabled by default.
      */
     public function getDefault(): bool
     {
@@ -74,8 +68,7 @@ class ChannelDefinition implements Arrayable
     }
 
     /**
-     * Дефолтное значение флага используемости канала
-     * @return bool
+     * Check if channel forced to use default value.
      */
     public function getForced(): bool
     {
@@ -83,8 +76,7 @@ class ChannelDefinition implements Arrayable
     }
 
     /**
-     * Флаг скрытия канала на фронтенде
-     * @return bool
+     * Check if channel should be hidden from user interface.
      */
     public function getHidden(): bool
     {
@@ -92,8 +84,7 @@ class ChannelDefinition implements Arrayable
     }
 
     /**
-     * Класс bootstrap иконки
-     * @return string
+     * Get channel bootstrap icon class name.
      */
     public function getIcon(): string
     {
@@ -101,10 +92,7 @@ class ChannelDefinition implements Arrayable
     }
 
     /**
-     * Отображаемое название
-     *
-     * @param string $title
-     * @return $this
+     * Set channel human readable title.
      */
     public function title(string $title): self
     {
@@ -113,10 +101,7 @@ class ChannelDefinition implements Arrayable
     }
 
     /**
-     * Значение по-умолчанию
-     *
-     * @param bool $default
-     * @return $this
+     * Set channel default.
      */
     public function default(bool $default): self
     {
@@ -125,10 +110,7 @@ class ChannelDefinition implements Arrayable
     }
 
     /**
-     * Флаг неизменяемости дефолтного значения
-     *
-     * @param bool $forced (default true)
-     * @return $this
+     * Set if channel is forced to use default value.
      */
     public function forced(bool $forced = true): self
     {
@@ -137,10 +119,7 @@ class ChannelDefinition implements Arrayable
     }
 
     /**
-     * Скрыть канал в интерфейсе (default false)
-     *
-     * @param bool $hidden
-     * @return $this
+     * Set if channel should be hidden from user interface.
      */
     public function hidden(bool $hidden = true): self
     {
@@ -149,10 +128,7 @@ class ChannelDefinition implements Arrayable
     }
 
     /**
-     * Установка названия класса bootstrap-icon (без префикса "bi bi-*")
-     *
-     * @param string $icon
-     * @return $this
+     * Set channel bootstrap icon class name (without prefix "bi bi-*").
      *
      * @see https://icons.getbootstrap.com/
      */
@@ -163,9 +139,7 @@ class ChannelDefinition implements Arrayable
     }
 
     /**
-     * Вычисляемое значение статуса канала оповещения
-     *
-     * @return bool
+     * Check if channel enabled using user preferences.
      */
     public function getStatus(bool $userChannelStatus = null): bool
     {
@@ -176,7 +150,7 @@ class ChannelDefinition implements Arrayable
         return $userChannelStatus;
     }
 
-    public function toArray()
+    public function toArray(): array
     {
         return [
             'name' => $this->name,

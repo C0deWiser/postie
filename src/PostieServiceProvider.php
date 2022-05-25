@@ -63,7 +63,7 @@ class PostieServiceProvider extends ServiceProvider
         Route::group([
             'domain' => config('postie.domain', null),
             'prefix' => config('postie.path'),
-            'middleware' => config('postie.middleware', 'web'),
+            'middleware' => array_merge(config('postie.middleware', 'web'), ['auth']),
             'as' => 'postie.',
         ], function () {
             $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
