@@ -2,7 +2,7 @@
     "name": "codewiser/postie",
     "description": "Subscription management Laravel package",
     "keywords": ["subscription", "notifications", "laravel"],
-    "version": "0.1.0",
+    "version": "0.1.1",
     "license": "MIT",
     "authors": [
         {

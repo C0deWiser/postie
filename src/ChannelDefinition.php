@@ -35,7 +35,7 @@ class ChannelDefinition implements Arrayable
                 $this->icon = 'bi bi-envelope-fill';
                 break;
             case 'database':
-                $this->icon = 'bi bi-hdd-fill';
+                $this->icon = 'bi bi-layers-fill';
                 break;
             default:
                 $this->icon = 'bi bi-record-circle-fill';
