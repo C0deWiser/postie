@@ -84,12 +84,7 @@ class PostieService implements Postie
     {
         $userNotificationDefinitions = $this->getNotifications()->for($notifiable);
 
-        // Get user notifications
-        $subscriptions = Subscription::for($notifiable, $userNotificationDefinitions->classNames())
-            ->get()
-            ->keyBy('notification');
-        
-        return $userNotificationDefinitions->buildUserNotificationsWithChannelStatuses($subscriptions);
+        return $userNotificationDefinitions->buildUserNotificationsWithChannelStatuses($notifiable);
     }
 
     public function toggleUserNotificationChannels($notifiable, string $notification, array $channels): Subscription

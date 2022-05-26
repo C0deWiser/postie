@@ -47,6 +47,7 @@ const router = new VueRouter({
 
 Vue.component('vue-json-pretty', VueJsonPretty);
 Vue.component('alert', require('./components/Alert.vue').default);
+Vue.component('channel-btn', require('./components/ChannelBtn').default);
 
 Vue.mixin(Base);
 

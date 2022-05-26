@@ -58,8 +58,11 @@ class NotificationCollection extends Collection
     /**
      * Build User Notifications with channel statuses
      */
-    public function buildUserNotificationsWithChannelStatuses(SubscriptionCollection $subscriptions): array
+    public function buildUserNotificationsWithChannelStatuses($notifiable): array
     {
+        // Get user notifications
+        $subscriptions = Subscription::for($notifiable, $this->classNames())->get();
+        
         $result = [];
         /** @var NotificationDefinition $notificationDefinition */
         foreach ($this as $notificationDefinition) {
@@ -69,7 +72,7 @@ class NotificationCollection extends Collection
 
             $subscription = $subscriptions->firstByNotification($notificationDefinition->getClassName());
 
-            $row['channels'] = $notificationDefinition->getChannels()->getResolvedByNotifiableSubscription($subscription);
+            $row['channels'] = $notificationDefinition->getChannels()->getResolvedByNotifiableSubscription($notifiable, $subscription);
 
             $result[] = $row;
         }

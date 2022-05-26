@@ -127,8 +127,7 @@ class PostieServiceProvider extends ServiceProvider
      */
     protected function registerCommands()
     {
-        // TODO: uncomment after development
-//        if ($this->app->runningInConsole()) {
+        if ($this->app->runningInConsole()) {
 
             $commands = [
                 InstallCommand::class,
@@ -136,6 +135,6 @@ class PostieServiceProvider extends ServiceProvider
             ];
 
             $this->commands($commands);
-//        }
+        }
     }
 }

@@ -10,9 +10,10 @@ class ChannelCollection extends Collection
 {
     /**
      * Get resolved channels array with status by notifiable subscription
+     * @param mixed $notifiable
      * @param Subscription|null $subscription
      */
-    public function getResolvedByNotifiableSubscription(Subscription $subscription = null): array
+    public function getResolvedByNotifiableSubscription($notifiable, Subscription $subscription = null): array
     {
         $channels = [];
 
@@ -25,7 +26,8 @@ class ChannelCollection extends Collection
                 ? $subscription->channels[$channelDefinition->getName()]
                 : null;
             
-            $currentChannel['status'] = $channelDefinition->getStatus($userChannelStatus);
+            $currentChannel['status'] = $channelDefinition->getStatus($notifiable, $userChannelStatus);
+            $currentChannel['available'] = (bool)$notifiable->routeNotificationFor($channelDefinition->getName());
             $channels[] = $currentChannel;
         }
 

@@ -141,8 +141,14 @@ class ChannelDefinition implements Arrayable
     /**
      * Check if channel enabled using user preferences.
      */
-    public function getStatus(bool $userChannelStatus = null): bool
+    public function getStatus($notifiable, bool $userChannelStatus = null): bool
     {
+
+        
+        $routeNotificationAvailable = (bool)$notifiable->routeNotificationFor($this->name);
+        
+        
+        
         if ($this->forced || is_null($userChannelStatus)) {
             return $this->default;
         }
