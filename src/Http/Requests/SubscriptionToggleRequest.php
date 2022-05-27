@@ -36,11 +36,9 @@ class SubscriptionToggleRequest extends FormRequest
 
         $definition = $postie->getNotifications()->find($this->notification);
 
-        if ($definition) {
-            foreach ($definition->getChannelNames() as $channelName) {
-                $key = 'channels.' . $channelName;
-                $channelRules[$key] = ['boolean'];
-            }
+        foreach ($definition->getChannelNames() as $channelName) {
+            $key = 'channels.' . $channelName;
+            $channelRules[$key] = ['boolean'];
         }
 
         return $channelRules;

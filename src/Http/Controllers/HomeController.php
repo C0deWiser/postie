@@ -2,8 +2,6 @@
 
 namespace Codewiser\Postie\Http\Controllers;
 
-use Codewiser\Postie\Contracts\Postie;
-use Codewiser\Postie\Contracts\PostieAssets;
 use Codewiser\Postie\PostieService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;

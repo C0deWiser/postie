@@ -6,6 +6,8 @@ use Closure;
 use Codewiser\Postie\Collections\NotificationCollection;
 use Codewiser\Postie\Contracts\Postie;
 use Codewiser\Postie\Contracts\PostieAssets;
+use Codewiser\Postie\Events\UserSubscribe;
+use Codewiser\Postie\Events\UserUnsubscribe;
 use Codewiser\Postie\Models\Subscription;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -113,6 +115,14 @@ class PostieService implements Postie
                 ->getUserChannels($channels);
         }
         $subscription->save();
+
+        foreach ($channels as $channel => $subscribed) {
+            if ($subscribed) {
+                event(new UserSubscribe($notifiable, $notification, $channel));
+            } else {
+                event(new UserUnsubscribe($notifiable, $notification, $channel));
+            }
+        }
 
         return $subscription;
     }
