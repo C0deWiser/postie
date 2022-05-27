@@ -9,7 +9,7 @@ class ChannelDefinition implements Arrayable
 {
     protected string $name;
     protected string $title;
-    protected bool $default = false;
+    protected bool $default = true;
     protected bool $forced = false;
     protected bool $hidden = false;
     protected string $icon;

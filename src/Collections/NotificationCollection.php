@@ -7,24 +7,29 @@ use Codewiser\Postie\Models\Subscription;
 use Codewiser\Postie\NotificationDefinition;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\ItemNotFoundException;
+use Illuminate\Support\MultipleItemsFoundException;
 
 class NotificationCollection extends Collection
 {
     /**
      * Find notification definition by class name.
+     *
+     * @throws ItemNotFoundException
+     * @throws MultipleItemsFoundException
      */
-    public function find(string $notification):?NotificationDefinition
+    public function find(string $notification): NotificationDefinition
     {
         return $this
             ->sole(function (NotificationDefinition $definition) use ($notification) {
-            return $definition->getClassName() === $notification;
-        });
+                return $definition->getClassName() === $notification;
+            });
     }
 
     /**
      * Find notification definition by index of definition.
      */
-    public function findByIndex(int $searchIndex):?NotificationDefinition
+    public function findByIndex(int $searchIndex): ?NotificationDefinition
     {
         return $this
             ->sole(function (NotificationDefinition $definition, $index) use ($searchIndex) {
@@ -35,7 +40,7 @@ class NotificationCollection extends Collection
     /**
      * Get class names of notifications.
      */
-    public function classNames():array
+    public function classNames(): array
     {
         return $this
             ->map(function (NotificationDefinition $notificationDefinition) {
@@ -62,7 +67,7 @@ class NotificationCollection extends Collection
     {
         // Get user notifications
         $subscriptions = Subscription::for($notifiable, $this->classNames())->get();
-        
+
         $result = [];
         /** @var NotificationDefinition $notificationDefinition */
         foreach ($this as $notificationDefinition) {

@@ -9,7 +9,8 @@ use Illuminate\Support\Collection;
 class ChannelCollection extends Collection
 {
     /**
-     * Get resolved channels array with status by notifiable subscription
+     * Get resolved channels array with status by notifiable subscription.
+     *
      * @param mixed $notifiable
      * @param Subscription|null $subscription
      */

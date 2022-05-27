@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Collection;
 class SubscriptionCollection extends Collection
 {
     /**
-     * Find first subscription by notification class name
+     * Find first subscription by notification class name.
      */
     public function firstByNotification(string $notification):?Subscription
     {

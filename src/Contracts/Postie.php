@@ -2,12 +2,14 @@
 
 namespace Codewiser\Postie\Contracts;
 
+use Closure;
 use Codewiser\Postie\Collections\NotificationCollection;
 use Codewiser\Postie\Models\Subscription;
 use Codewiser\Postie\NotificationDefinition;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Notifications\Notification;
 
 interface Postie
 {
@@ -43,4 +45,15 @@ interface Postie
      * @return Subscription
      */
     public function toggleUserNotificationChannels($notifiable, string $notification, array $channels): Subscription;
+
+    /**
+     * Send notification to audience. Use callback to modify audience builder.
+     *
+     * Or send notification to the exact notifiable, passed by second argument.
+     *
+     * @param Notification $notification
+     * @param mixed $closure
+     * @return void
+     */
+    public function send(Notification $notification, $closure = null);
 }

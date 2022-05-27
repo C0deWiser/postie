@@ -91,12 +91,19 @@ class NotificationDefinition implements Arrayable
     /**
      * Set notification available channels.
      *
-     * @param array<ChannelDefinition> $channels
+     * @param array<ChannelDefinition, string> $channels
      * @return $this
      */
-    public function channels(array $channels): self
+    public function via(array $channels): self
     {
+        foreach ($channels as $i => $channel) {
+            if (is_string($channels)) {
+                $channels[$i] = ChannelDefinition::make($channel);
+            }
+        }
+
         $this->channels = $channels;
+
         return $this;
     }
 
