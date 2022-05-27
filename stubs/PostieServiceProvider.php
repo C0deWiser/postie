@@ -20,7 +20,11 @@ class PostieServiceProvider extends PostieApplicationServiceProvider
             NotificationDefinition::make('App\Notifications\MyNotification')
                 ->title('Digest')
                 ->audience(fn() => User::query())
-                ->via(['mail'])
+                ->via([
+                    'mail',
+                    ChannelDefinition::make('telegram')
+                        ->passive()
+                ])
         ];
     }
 }

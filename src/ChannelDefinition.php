@@ -110,7 +110,23 @@ class ChannelDefinition implements Arrayable
     }
 
     /**
-     * Set if channel is forced to use default value.
+     * Set channel active by default.
+     */
+    public function active(): self
+    {
+        return $this->default(true);
+    }
+
+    /**
+     * Set channel passive by default.
+     */
+    public function passive(): self
+    {
+        return $this->default(false);
+    }
+
+    /**
+     * Set if channel is forced to use default state.
      */
     public function forced(bool $forced = true): self
     {
