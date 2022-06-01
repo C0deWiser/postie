@@ -12,29 +12,26 @@ use Illuminate\Http\Request;
 class SubscriptionController extends Controller
 {
     /**
-     * Список оповещений пользователя
-     * @param Request $request
-     * @param Postie $postie
-     * @return JsonResponse
+     * User notifications list.
      */
     public function index(Request $request, Postie $postie)
     {
-        $notificationDefinitions = $postie->getUserNotifications($request->user());
         return response()->json([
-            'notification_definitions' => $notificationDefinitions,
+            'notification_definitions' => $postie->getUserNotifications($request->user()),
         ]);
     }
 
     /**
-     * Изменение статуса канала оповещения пользователя
-     *
-     * @param SubscriptionToggleRequest $request
-     * @param Postie $postie
-     * @return SubscriptionResource
+     * Change user preferences.
      */
     public function toggle(SubscriptionToggleRequest $request, Postie $postie)
     {
-        $subscription = $postie->toggleUserNotificationChannels($request->user(), $request->notification, $request->channels);
+        $subscription = $postie->toggleUserNotificationChannels(
+            $request->user(),
+            $request->notification,
+            $request->channels
+        );
+
         return SubscriptionResource::make($subscription);
     }
 }

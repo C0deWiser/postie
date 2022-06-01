@@ -7,7 +7,7 @@
             <table class="table table-hover table-sm mb-0">
                 <thead>
                 <tr>
-                    <th>Event</th>
+                    <th>Notification</th>
                     <th>Channels</th>
                 </tr>
                 </thead>
@@ -67,9 +67,10 @@ export default {
                 });
         },
         /**
-         * Изменение статуса канала оповещения
-         * @param {Object} notificationDefinition Оповещение
-         * @param {Object} channel Канал
+         * Toggle notification channel.
+         *
+         * @param {Object} notificationDefinition Notification.
+         * @param {Object} channel Channel.
          */
         toggleChannel(notificationDefinition, channel) {
             if (channel.forced) {

@@ -25,20 +25,24 @@ export default {
     },
     methods: {
         /**
-         * Вычисляет title
+         * Get title.
          *
          * @param {Object} channel
          * @returns {string}
          */
         getTitle(channel) {
-            let status = channel.status ? 'Включен' : 'Выключен';
-            let notAvailable = channel.available ? '' : 'Не указан адрес!';
 
-            let title = `${notAvailable} ` + channel.title + ` (${status})`;
-            if (channel.forced) {
-                title += ' Недоступно для изменения';
+            let title = channel.name.charAt(0).toUpperCase() + channel.name.slice(1);
+
+            if (channel.available) {
+                if (channel.forced) {
+                    return title + ' channel is forced to be ' + (channel.status ? 'enabled' : 'disabled');
+                } else {
+                    return title + ' channel is ' + (channel.status ? 'enabled' : 'disabled');
+                }
+            } else {
+                return 'No route to the ' + title + ' channel';
             }
-            return title;
         },
     },
 }

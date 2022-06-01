@@ -61,27 +61,23 @@ class NotificationCollection extends Collection
     }
 
     /**
-     * Build User Notifications with channel statuses
+     * Build User Notifications with channel statuses.
      */
     public function buildUserNotificationsWithChannelStatuses($notifiable): array
     {
-        // Get user notifications
+        /** @var SubscriptionCollection $subscriptions */
         $subscriptions = Subscription::for($notifiable, $this->classNames())->get();
 
-        $result = [];
-        /** @var NotificationDefinition $notificationDefinition */
-        foreach ($this as $notificationDefinition) {
-            $row = [];
-            $row['notification'] = $notificationDefinition->getClassName();
-            $row['title'] = $notificationDefinition->getTitle();
+        return $this
+            ->map(function (NotificationDefinition $definition) use ($notifiable, $subscriptions) {
+                $row = $definition->toArray();
 
-            $subscription = $subscriptions->firstByNotification($notificationDefinition->getClassName());
+                $subscription = $subscriptions->firstByNotification($definition->getClassName());
 
-            $row['channels'] = $notificationDefinition->getChannels()->getResolvedByNotifiableSubscription($notifiable, $subscription);
+                $row['channels'] = $definition->getChannels()->getResolvedByNotifiableSubscription($notifiable, $subscription);
 
-            $result[] = $row;
-        }
-
-        return $result;
+                return $row;
+            })
+            ->toArray();
     }
 }

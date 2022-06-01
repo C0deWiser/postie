@@ -52,7 +52,7 @@
             <div class="col-10">
                 @if (! $assetsAreCurrent)
                     <div class="alert alert-warning">
-                        @lang('The published Postie assets are not up-to-date with the installed version. To update, run:')<br/><code>php artisan postie:publish</code>
+                        The published Postie assets are not up-to-date with the installed version. To update, run:<br/><code>php artisan postie:publish</code>
                     </div>
                 @endif
 

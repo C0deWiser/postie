@@ -2,13 +2,8 @@
 
 namespace Codewiser\Postie\Contracts;
 
-use Closure;
 use Codewiser\Postie\Collections\NotificationCollection;
 use Codewiser\Postie\Models\Subscription;
-use Codewiser\Postie\NotificationDefinition;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Notifications\AnonymousNotifiable;
-use Illuminate\Notifications\Notifiable;
 use Illuminate\Notifications\Notification;
 
 interface Postie

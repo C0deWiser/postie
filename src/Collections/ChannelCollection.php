@@ -16,22 +16,19 @@ class ChannelCollection extends Collection
      */
     public function getResolvedByNotifiableSubscription($notifiable, Subscription $subscription = null): array
     {
-        $channels = [];
+        return $this
+            ->map(function (ChannelDefinition $definition) use ($notifiable, $subscription) {
+                $defaults = $definition->toArray();
 
-        /** @var ChannelDefinition $channelDefinition */
-        foreach ($this as $channelDefinition) {
-            $currentChannel = $channelDefinition->toArray();
+                // If record has channel...
+                $userPreferences = $subscription && isset($subscription->channels[$definition->getName()])
+                    ? $subscription->channels[$definition->getName()]
+                    : null;
 
-            // Если в данной записи определен текущий канал оповещения
-            $userChannelStatus = $subscription && isset($subscription->channels[$channelDefinition->getName()])
-                ? $subscription->channels[$channelDefinition->getName()]
-                : null;
-            
-            $currentChannel['status'] = $channelDefinition->getStatus($notifiable, $userChannelStatus);
-            $currentChannel['available'] = (bool)$notifiable->routeNotificationFor($channelDefinition->getName());
-            $channels[] = $currentChannel;
-        }
-
-        return $channels;
+                $defaults['status'] = $definition->getStatus($notifiable, $userPreferences);
+                $defaults['available'] = (bool)$notifiable->routeNotificationFor($definition->getName());
+                return $defaults;
+            })
+            ->toArray();
     }
 }
