@@ -2,180 +2,19 @@
 
 namespace Codewiser\Postie;
 
-use Closure;
-use Codewiser\Postie\Collections\ChannelCollection;
-use Illuminate\Contracts\Database\Eloquent\Builder;
-use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Notifications\Notification;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
-
-class NotificationDefinition implements Arrayable
+/**
+ * @deprecated
+ */
+class NotificationDefinition extends Subscription
 {
-    protected string $class_name;
-    protected ?Closure $audienceBuilder = null;
-    protected array $channels = [];
-    protected string $title;
-    protected ?Closure $preview = null;
-
     /**
      * Make definition using notification class name.
      *
      * @param string $notification
-     * @return NotificationDefinition
+     * @return Subscription
      */
-    public static function make(string $notification): NotificationDefinition
+    public static function make(string $notification): Subscription
     {
         return new static($notification);
-    }
-
-    /**
-     * @param string $notification notification class name.
-     */
-    public function __construct(string $notification)
-    {
-        $this->class_name = $notification;
-        $this->title = (string)Str::of(class_basename($notification))->snake()->studly();
-    }
-
-    /**
-     * Get notification class name.
-     */
-    public function getClassName(): string
-    {
-        return $this->class_name;
-    }
-
-    /**
-     * Get Builder that holds notification audience.
-     */
-    public function getAudienceBuilder(): ?Builder
-    {
-        return $this->audienceBuilder ? call_user_func($this->audienceBuilder) : null;
-    }
-
-    /**
-     * Get notification available channels.
-     */
-    public function getChannels(): ChannelCollection
-    {
-        return ChannelCollection::make($this->channels ?? []);
-    }
-
-    /**
-     * Get notification description.
-     */
-    public function getTitle(): string
-    {
-        return $this->title;
-    }
-
-    /**
-     * Get notification for previewing.
-     */
-    public function getNotificationForPreviewing(): ?Notification
-    {
-        return $this->preview ? call_user_func($this->preview) : null;
-    }
-
-    /**
-     * Define Builder that holds notification possible audience. Closure should return Eloquent Builder.
-     *
-     * @deprecated
-     */
-    public function audience(Closure $audienceBuilder): self
-    {
-        return $this->for($audienceBuilder);
-    }
-
-    /**
-     * Define Builder that holds notification possible audience. Closure should return Eloquent Builder.
-     */
-    public function for(Closure $audienceBuilder): self
-    {
-        $this->audienceBuilder = $audienceBuilder;
-        return $this;
-    }
-
-    /**
-     * Set notification human readable description.
-     */
-    public function title(string $title): self
-    {
-        $this->title = $title;
-        return $this;
-    }
-
-    /**
-     * Set notification available channels.
-     *
-     * @param ChannelDefinition|string|array $channels
-     */
-    public function via($channels): self
-    {
-        if (!is_array($channels)) {
-            $channels = func_get_args();
-        }
-
-        foreach ($channels as $i => $channel) {
-            if (is_string($channels)) {
-                $channels[$i] = ChannelDefinition::make($channel);
-            }
-        }
-
-        $this->channels = $channels;
-
-        return $this;
-    }
-
-    /**
-     * Set notification for previewing.
-     */
-    public function preview(Closure $notification): self
-    {
-        $this->preview = $notification;
-
-        return $this;
-    }
-
-    public function toArray(): array
-    {
-        return [
-            'notification' => $this->class_name,
-            'title' => $this->title,
-            'channels' => $this->getChannels()->toArray(),
-        ];
-    }
-
-
-    /**
-     * Get notification channels using user preferences.
-     */
-    public function getUserChannels(array $userChannels = []): array
-    {
-        return $this->getChannels()
-            ->mapWithKeys(function (ChannelDefinition $channelDefinition) use ($userChannels) {
-                return [
-                    $channelDefinition->getName() => $channelDefinition->getForced()
-                        ? $channelDefinition->getDefault()
-                        : (array_key_exists($channelDefinition->getName(), $userChannels)
-                            ? $userChannels[$channelDefinition->getName()]
-                            : $channelDefinition->getDefault()
-                        )
-                ];
-            })
-            ->toArray();
-    }
-
-    /**
-     * Get notification channels names.
-     */
-    public function getChannelNames(): array
-    {
-        return $this->getChannels()
-            ->map(function (ChannelDefinition $channelDefinition) {
-                return $channelDefinition->getName();
-            })
-            ->toArray();
     }
 }

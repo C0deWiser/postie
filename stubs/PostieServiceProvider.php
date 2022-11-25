@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
-use Codewiser\Postie\ChannelDefinition;
-use Codewiser\Postie\NotificationDefinition;
+use Codewiser\Postie\Channel;
+use Codewiser\Postie\Subscription;
 use Codewiser\Postie\PostieApplicationServiceProvider;
 use Illuminate\Foundation\Auth\User;
 
@@ -17,12 +17,12 @@ class PostieServiceProvider extends PostieApplicationServiceProvider
     public function notifications(): array
     {
         return [
-            NotificationDefinition::make('App\Notifications\MyNotification')
+            Subscription::to('App\Notifications\MyNotification')
                 ->title('Digest')
-                ->audience(fn() => User::query())
+                ->for(fn() => User::query())
                 ->via([
                     'mail',
-                    ChannelDefinition::make('telegram')
+                    Channel::via('telegram')
                         ->passive()
                 ])
         ];

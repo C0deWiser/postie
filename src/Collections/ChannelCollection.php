@@ -2,7 +2,7 @@
 
 namespace Codewiser\Postie\Collections;
 
-use Codewiser\Postie\ChannelDefinition;
+use Codewiser\Postie\Channel;
 use Codewiser\Postie\Models\Subscription;
 use Illuminate\Support\Collection;
 
@@ -17,7 +17,7 @@ class ChannelCollection extends Collection
     public function getResolvedByNotifiableSubscription($notifiable, Subscription $subscription = null): array
     {
         return $this
-            ->map(function (ChannelDefinition $definition) use ($notifiable, $subscription) {
+            ->map(function (Channel $definition) use ($notifiable, $subscription) {
                 $defaults = $definition->toArray();
 
                 // If record has channel...

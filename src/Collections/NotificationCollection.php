@@ -2,9 +2,8 @@
 
 namespace Codewiser\Postie\Collections;
 
-use Codewiser\Postie\ChannelDefinition;
 use Codewiser\Postie\Models\Subscription;
-use Codewiser\Postie\NotificationDefinition;
+use Codewiser\Postie\Subscription as SubscriptionDefinition;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\ItemNotFoundException;
@@ -18,10 +17,10 @@ class NotificationCollection extends Collection
      * @throws ItemNotFoundException
      * @throws MultipleItemsFoundException
      */
-    public function find(string $notification): NotificationDefinition
+    public function find(string $notification): SubscriptionDefinition
     {
         return $this
-            ->sole(function (NotificationDefinition $definition) use ($notification) {
+            ->sole(function (SubscriptionDefinition $definition) use ($notification) {
                 return $definition->getClassName() === $notification;
             });
     }
@@ -29,10 +28,10 @@ class NotificationCollection extends Collection
     /**
      * Find notification definition by index of definition.
      */
-    public function findByIndex(int $searchIndex): ?NotificationDefinition
+    public function findByIndex(int $searchIndex): ?SubscriptionDefinition
     {
         return $this
-            ->sole(function (NotificationDefinition $definition, $index) use ($searchIndex) {
+            ->sole(function (SubscriptionDefinition $definition, $index) use ($searchIndex) {
                 return $index === $searchIndex;
             });
     }
@@ -43,7 +42,7 @@ class NotificationCollection extends Collection
     public function classNames(): array
     {
         return $this
-            ->map(function (NotificationDefinition $notificationDefinition) {
+            ->map(function (SubscriptionDefinition $notificationDefinition) {
                 return $notificationDefinition->getClassName();
             })
             ->toArray();
@@ -55,7 +54,7 @@ class NotificationCollection extends Collection
     public function for(Model $notifiable): self
     {
         return $this
-            ->filter(function (NotificationDefinition $notificationDefinition) use ($notifiable) {
+            ->filter(function (SubscriptionDefinition $notificationDefinition) use ($notifiable) {
                 if ($builder = $notificationDefinition->getAudienceBuilder()) {
                     return (bool)$builder->find($notifiable->getKey());
                 } else {
@@ -73,7 +72,7 @@ class NotificationCollection extends Collection
         $subscriptions = Subscription::for($notifiable, $this->classNames())->get();
 
         return $this
-            ->map(function (NotificationDefinition $definition) use ($notifiable, $subscriptions) {
+            ->map(function (SubscriptionDefinition $definition) use ($notifiable, $subscriptions) {
                 $row = $definition->toArray();
 
                 $subscription = $subscriptions->firstByNotification($definition->getClassName());

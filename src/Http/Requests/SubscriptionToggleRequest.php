@@ -2,10 +2,7 @@
 
 namespace Codewiser\Postie\Http\Requests;
 
-use Codewiser\Postie\ChannelDefinition;
 use Codewiser\Postie\Contracts\Postie;
-use Codewiser\Postie\NotificationDefinition;
-use Codewiser\Postie\PostieService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 

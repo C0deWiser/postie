@@ -21,8 +21,8 @@ After installing Postie, its service provider will be located at `App\Proviers\P
 First, provide information about every `Notification`, that users may manage:
 
 ```php
-use Codewiser\Postie\ChannelDefinition;
-use Codewiser\Postie\NotificationDefinition;
+use Codewiser\Postie\Channel;
+use Codewiser\Postie\Subscription;
 use Codewiser\Postie\PostieApplicationServiceProvider;
 
 class PostieServiceProvider extends PostieApplicationServiceProvider
@@ -30,7 +30,7 @@ class PostieServiceProvider extends PostieApplicationServiceProvider
 public function notifications(): array
     {
         return [
-            NotificationDefinition::make(NewOrderNotification::class)
+            Subscription::make(NewOrderNotification::class)
                 ->audience(fn() => User::query()->where('role', 'sales-manager'))
                 ->via(['mail'])
         ];
@@ -102,9 +102,9 @@ When you set up Notification Definition, you may pass channel as a simple string
 You may use `\Codewiser\Postie\ChannelDefinition` object to describe channel:
 
 ```php
-use Codewiser\Postie\ChannelDefinition;
+use Codewiser\Postie\Channel;
 
-$mail = ChannelDefinition::make('mail')
+$mail = Channel::make('mail')
     ->title(__('via email'));
 ```
 
@@ -113,9 +113,9 @@ You may define default state of channel. If channel is active, then all users wi
 Default channel state is active.
 
 ```php
-use Codewiser\Postie\ChannelDefinition;
+use Codewiser\Postie\Channel;
 
-$mail = ChannelDefinition::make('mail')
+$mail = Channel::make('mail')
     ->title(__('via email'))
     ->passive();
 ```
@@ -123,16 +123,16 @@ $mail = ChannelDefinition::make('mail')
 If you want to disable user ability to manage channel preferences, you may hide channel form user interface, or just force channel state.
 
 ```php
-use Codewiser\Postie\ChannelDefinition;
+use Codewiser\Postie\Channel;
 
-$mail = ChannelDefinition::make('database')
+$mail = Channel::make('database')
     ->hidden();
 ```
 
 ```php
-use Codewiser\Postie\ChannelDefinition;
+use Codewiser\Postie\Channel;
 
-$mail = ChannelDefinition::make('mail')
+$mail = Channel::make('mail')
     ->title(__('via email'))
     ->forced();
 ```

@@ -18,7 +18,7 @@ use Illuminate\Support\MultipleItemsFoundException;
 class PostieService implements Postie
 {
     /**
-     * @var array<NotificationDefinition>
+     * @var array<Subscription>
      */
     public static array $notifications = [];
 
