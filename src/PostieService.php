@@ -5,15 +5,12 @@ namespace Codewiser\Postie;
 use Closure;
 use Codewiser\Postie\Collections\NotificationCollection;
 use Codewiser\Postie\Contracts\Postie;
-use Codewiser\Postie\Contracts\PostieAssets;
 use Codewiser\Postie\Events\UserSubscribe;
 use Codewiser\Postie\Events\UserUnsubscribe;
 use Codewiser\Postie\Models\Subscription;
-use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\ItemNotFoundException;
 use Illuminate\Support\MultipleItemsFoundException;
@@ -129,14 +126,18 @@ class PostieService implements Postie
 
     public function send(Notification $notification, $closure = null)
     {
+        $audience = null;
+
         try {
             $definition = $this->getNotifications()->find(get_class($notification));
 
-            $audience = (is_callable($closure) || $closure instanceof Closure)
-                // Modify predefined audience builder with callback
-                ? call_user_func($closure, $definition->getAudienceBuilder())
-                // Use predefined audience builder
-                : $definition->getAudienceBuilder();
+            if ($builder = $definition->getAudienceBuilder()) {
+                $audience = (is_callable($closure) || $closure instanceof Closure)
+                    // Modify predefined audience builder with callback
+                    ? call_user_func($closure, $builder)
+                    // Use predefined audience builder
+                    : $builder;
+            }
 
         } catch (ItemNotFoundException|MultipleItemsFoundException $exception) {
             // Fallback

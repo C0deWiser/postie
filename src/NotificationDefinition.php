@@ -6,15 +6,17 @@ use Closure;
 use Codewiser\Postie\Collections\ChannelCollection;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class NotificationDefinition implements Arrayable
 {
     protected string $class_name;
-    protected Closure $audienceBuilder;
-    protected array $channels;
+    protected ?Closure $audienceBuilder = null;
+    protected array $channels = [];
     protected string $title;
+    protected ?Closure $preview = null;
 
     /**
      * Make definition using notification class name.
@@ -47,19 +49,17 @@ class NotificationDefinition implements Arrayable
     /**
      * Get Builder that holds notification audience.
      */
-    public function getAudienceBuilder(): Builder
+    public function getAudienceBuilder(): ?Builder
     {
-        return call_user_func($this->audienceBuilder);
+        return $this->audienceBuilder ? call_user_func($this->audienceBuilder) : null;
     }
 
     /**
      * Get notification available channels.
-     *
-     * @return ChannelCollection
      */
     public function getChannels(): ChannelCollection
     {
-        return ChannelCollection::make($this->channels);
+        return ChannelCollection::make($this->channels ?? []);
     }
 
     /**
@@ -71,9 +71,27 @@ class NotificationDefinition implements Arrayable
     }
 
     /**
+     * Get notification for previewing.
+     */
+    public function getNotificationForPreviewing(): ?Notification
+    {
+        return $this->preview ? call_user_func($this->preview) : null;
+    }
+
+    /**
      * Define Builder that holds notification possible audience. Closure should return Eloquent Builder.
+     *
+     * @deprecated
      */
     public function audience(Closure $audienceBuilder): self
+    {
+        return $this->for($audienceBuilder);
+    }
+
+    /**
+     * Define Builder that holds notification possible audience. Closure should return Eloquent Builder.
+     */
+    public function for(Closure $audienceBuilder): self
     {
         $this->audienceBuilder = $audienceBuilder;
         return $this;
@@ -92,7 +110,6 @@ class NotificationDefinition implements Arrayable
      * Set notification available channels.
      *
      * @param array<ChannelDefinition, string> $channels
-     * @return $this
      */
     public function via(array $channels): self
     {
@@ -103,6 +120,16 @@ class NotificationDefinition implements Arrayable
         }
 
         $this->channels = $channels;
+
+        return $this;
+    }
+
+    /**
+     * Set notification for previewing.
+     */
+    public function preview(Closure $notification): self
+    {
+        $this->preview = $notification;
 
         return $this;
     }

@@ -56,7 +56,11 @@ class NotificationCollection extends Collection
     {
         return $this
             ->filter(function (NotificationDefinition $notificationDefinition) use ($notifiable) {
-                return (bool)$notificationDefinition->getAudienceBuilder()->find($notifiable->getKey());
+                if ($builder = $notificationDefinition->getAudienceBuilder()) {
+                    return (bool)$builder->find($notifiable->getKey());
+                } else {
+                    return false;
+                }
             });
     }
 
