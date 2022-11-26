@@ -13,6 +13,7 @@ class Channel implements Arrayable
     protected bool $forced = false;
     protected bool $hidden = false;
     protected string $icon;
+    protected ?string $subtitle = null;
 
     /**
      * Make definition with channel name.
@@ -60,6 +61,14 @@ class Channel implements Arrayable
     }
 
     /**
+     * Get channel description.
+     */
+    public function getSubtitle(): ?string
+    {
+        return $this->subtitle;
+    }
+
+    /**
      * Check if channel enabled by default.
      */
     public function getDefault(): bool
@@ -97,6 +106,15 @@ class Channel implements Arrayable
     public function title(string $title): self
     {
         $this->title = $title;
+        return $this;
+    }
+
+    /**
+     * Set channel description.
+     */
+    public function subtitle(string $subtitle): self
+    {
+        $this->subtitle = $subtitle;
         return $this;
     }
 
@@ -169,12 +187,13 @@ class Channel implements Arrayable
     public function toArray(): array
     {
         return [
-            'name' => $this->name,
-            'title' => $this->title,
-            'default' => $this->default,
-            'forced' => $this->forced,
-            'hidden' => $this->hidden,
-            'icon' => $this->icon,
+            'name' => $this->getName(),
+            'title' => $this->getTitle(),
+            'subtitle' => $this->getSubtitle(),
+            'default' => $this->getDefault(),
+            'forced' => $this->getForced(),
+            'hidden' => $this->getHidden(),
+            'icon' => $this->getIcon(),
         ];
     }
 }

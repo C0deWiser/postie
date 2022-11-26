@@ -96,7 +96,6 @@ class PostieServiceProvider extends ServiceProvider
     {
         $this->publishes([
             POSTIE_PATH . '/public' => public_path('vendor/postie'),
-            POSTIE_PATH . '/resources/lang' => resource_path('lang/vendor/postie'),
         ], ['postie-assets', 'laravel-assets']);
     }
 
@@ -119,6 +118,10 @@ class PostieServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__ . '/../database/migrations' => database_path('migrations'),
             ], 'postie-migrations');
+
+            $this->publishes([
+                __DIR__ . '/../resources/lang' => resource_path('lang/vendor/postie'),
+            ], 'postie-translations');
         }
     }
 

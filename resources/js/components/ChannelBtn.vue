@@ -6,7 +6,7 @@
             {{ channel.title }}
         </button>
         <div class="dropdown-menu">
-            <h6 class="dropdown-header">{{ this.getTitle(channel) }}</h6>
+            <h6 class="dropdown-header" v-if="channel.subtitle">{{ channel.subtitle }}</h6>
             <button class="dropdown-item"
                     :class="this.getToggleClass(channel)"
                     type="button"

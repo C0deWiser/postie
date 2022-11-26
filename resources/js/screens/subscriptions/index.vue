@@ -43,7 +43,7 @@ export default {
         };
     },
     mounted() {
-        document.title = "Postie - " + this.$root.$gettext('subscriptions.title');
+        document.title = "Postie";
         this.fetchData();
     },
     watch: {
@@ -61,6 +61,8 @@ export default {
                     this.notificationDefinitions = response.data.notification_definitions;
                     this.error = undefined;
                     this.ready = true;
+
+                    document.title = "Postie - " + this.$root.$gettext('subscriptions.title');
                 })
                 .catch(error => {
                     this.error = error;

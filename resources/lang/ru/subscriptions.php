@@ -6,7 +6,7 @@ return [
     'channels' => 'Способы уведомления',
     'preview' => 'Предпросмотр',
     'subscribe' => 'Подписаться',
-    'unsubscribe' => 'Отписаться',
+    'unsubscribe' => 'Не получать',
     'subscribed' => 'Вы подписаны',
     'unsubscribed' => 'Вы не подписаны',
     'forceSubscribed' => 'Вы не можете отписаться',
