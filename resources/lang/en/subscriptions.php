@@ -11,5 +11,5 @@ return [
     'unsubscribed' => 'You unsubscribed',
     'forceSubscribed' => 'You can not unsubscribe',
     'forceUnsubscribed' => 'You can not subscribe',
-    'unavailableChannel' => 'Channel is unavailable',
+    'unavailableChannel' => 'Channel unavailable',
 ];

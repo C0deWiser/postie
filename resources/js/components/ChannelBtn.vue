@@ -1,6 +1,7 @@
 <template>
-    <div class="btn-group mr-1" v-if="!channel.hidden && channel.available">
-        <button type="button" class="btn btn-sm dropdown-toggle" :class="this.getColor(channel)"
+    <div class="btn-group mr-1" v-if="!channel.hidden">
+        <button type="button" class="btn btn-sm dropdown-toggle"
+                :class="this.getColor(channel)"
                 data-toggle="dropdown" aria-expanded="false">
             <i :class="channel.icon"></i>
             {{ channel.title }}
