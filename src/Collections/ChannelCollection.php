@@ -5,9 +5,25 @@ namespace Codewiser\Postie\Collections;
 use Codewiser\Postie\Channel;
 use Codewiser\Postie\Models\Subscription;
 use Illuminate\Support\Collection;
+use Illuminate\Support\ItemNotFoundException;
+use Illuminate\Support\MultipleItemsFoundException;
 
 class ChannelCollection extends Collection
 {
+    /**
+     * Find channel definition by its name.
+     *
+     * @throws ItemNotFoundException
+     * @throws MultipleItemsFoundException
+     */
+    public function find(string $channel): Channel
+    {
+        return $this
+            ->sole(function (Channel $definition) use ($channel) {
+                return $definition->getName() === $channel;
+            });
+    }
+
     /**
      * Get resolved channels array with status by notifiable subscription.
      *

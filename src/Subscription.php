@@ -4,6 +4,7 @@ namespace Codewiser\Postie;
 
 use Closure;
 use Codewiser\Postie\Collections\ChannelCollection;
+use Illuminate\Contracts\Auth\Authenticatable as User;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Notifications\Notification;
@@ -72,9 +73,17 @@ class Subscription implements Arrayable
     /**
      * Get notification for previewing.
      */
-    public function getNotificationForPreviewing(): ?Notification
+    public function getNotificationForPreviewing(string $channel, User $notifiable): ?Notification
     {
-        return $this->preview ? call_user_func($this->preview) : null;
+        return $this->preview ? call_user_func($this->preview, $channel, $notifiable) : null;
+    }
+
+    /**
+     * Check if previewing notification is defined.
+     */
+    public function hasNotificationForPreviewing(): bool
+    {
+        return !is_null($this->preview);
     }
 
     /**
@@ -129,6 +138,8 @@ class Subscription implements Arrayable
 
     /**
      * Set notification for previewing.
+     *
+     * Closure will get $channel (string) and $notifiable (authenticatable) parameters.
      */
     public function preview(Closure $notification): self
     {
@@ -140,9 +151,10 @@ class Subscription implements Arrayable
     public function toArray(): array
     {
         return [
-            'notification' => $this->class_name,
-            'title' => $this->title,
+            'notification' => $this->getClassName(),
+            'title' => $this->getTitle(),
             'channels' => $this->getChannels()->toArray(),
+            'preview' => $this->hasNotificationForPreviewing(),
         ];
     }
 
