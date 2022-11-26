@@ -5,6 +5,7 @@ import qs from 'qs';
 import Routes from './routes';
 import VueRouter from 'vue-router';
 import VueJsonPretty from 'vue-json-pretty';
+import translations from "./translations";
 
 window.Popper = require('popper.js').default;
 
@@ -54,6 +55,8 @@ Vue.mixin(Base);
 new Vue({
     el: '#postie',
 
+    mixins: [translations],
+
     router,
 
     data() {
@@ -66,5 +69,10 @@ new Vue({
                 confirmationCancel: null,
             },
         };
+    },
+
+    mounted() {
+        this.setLocale(document.documentElement.lang);
+        this.setTranslations(window.translations)
     }
 });

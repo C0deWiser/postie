@@ -13,7 +13,7 @@
                     @click="$emit('toggle')">{{ this.getCaption(channel) }}</button>
             <div class="dropdown-divider" v-if="channel.previewing"></div>
             <a class="dropdown-item" v-if="channel.previewing"
-               target="_blank" :href="channel.previewing">Preview</a>
+               target="_blank" :href="channel.previewing">{{ $root.$gettext('subscriptions.preview') }}</a>
         </div>
     </div>
 </template>
@@ -30,7 +30,9 @@ export default {
     },
     methods: {
         getCaption(channel) {
-            return channel.status ? 'Unsubscribe' : 'Subscribe';
+            return channel.status ?
+                this.$root.$gettext('subscriptions.unsubscribe') :
+                this.$root.$gettext('subscriptions.subscribe');
         },
         getToggleClass(channel) {
             return channel.forced ? 'disabled' : '';
@@ -55,12 +57,16 @@ export default {
         getTitle(channel) {
             if (channel.available) {
                 if (channel.forced) {
-                    return 'You are forced to be ' + (channel.status ? 'subscribed' : 'unsubscribed');
+                    return channel.status ?
+                        this.$root.$gettext('subscriptions.forceSubscribed') :
+                        this.$root.$gettext('subscriptions.forceUnsubscribed');
                 } else {
-                    return 'You are ' + (channel.status ? 'subscribed' : 'unsubscribed');
+                    return channel.status ?
+                        this.$root.$gettext('subscriptions.subscribed') :
+                        this.$root.$gettext('subscriptions.unsubscribed');
                 }
             } else {
-                return 'Unavailable channel';
+                return this.$root.$gettext('subscriptions.unavailableChannel');
             }
         },
     },

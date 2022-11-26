@@ -1,14 +1,14 @@
 <template>
     <div class="card">
         <div class="card-header d-flex align-items-center justify-content-between">
-            <h5>Subscriptions</h5>
+            <h5>{{ $root.$gettext('subscriptions.title') }}</h5>
         </div>
         <div  class="card-body pb-0 pt-0 pr-0 pl-0 " :class="{loading:!ready}">
             <table class="table table-hover table-sm mb-0">
                 <thead>
                 <tr>
-                    <th>Notification</th>
-                    <th>Channels</th>
+                    <th>{{ $root.$gettext('subscriptions.notification') }}</th>
+                    <th>{{ $root.$gettext('subscriptions.channels') }}</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -43,7 +43,7 @@ export default {
         };
     },
     mounted() {
-        document.title = "Postie - Subscriptions";
+        document.title = "Postie - " + this.$root.$gettext('subscriptions.title');
         this.fetchData();
     },
     watch: {

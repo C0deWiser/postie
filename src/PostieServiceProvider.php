@@ -39,7 +39,7 @@ class PostieServiceProvider extends ServiceProvider
         }
 
         $this->mergeConfigFrom(__DIR__ . '/../config/postie.php', 'postie');
-        
+
         $this->app->singleton(Postie::class, function () {
             return new PostieService();
         });
@@ -62,7 +62,7 @@ class PostieServiceProvider extends ServiceProvider
             'middleware' => array_merge(config('postie.middleware', 'web'), ['auth']),
             'as' => 'postie.',
         ], function () {
-            $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+            $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
         });
     }
 
@@ -73,7 +73,7 @@ class PostieServiceProvider extends ServiceProvider
      */
     protected function registerMigrations()
     {
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
     }
 
     /**
@@ -83,7 +83,8 @@ class PostieServiceProvider extends ServiceProvider
      */
     protected function registerResources()
     {
-        $this->loadViewsFrom(__DIR__.'/../resources/views', 'postie');
+        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'postie');
+        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'postie');
     }
 
     /**
@@ -95,6 +96,7 @@ class PostieServiceProvider extends ServiceProvider
     {
         $this->publishes([
             POSTIE_PATH . '/public' => public_path('vendor/postie'),
+            POSTIE_PATH . '/resources/lang' => resource_path('lang/vendor/postie'),
         ], ['postie-assets', 'laravel-assets']);
     }
 
@@ -107,15 +109,15 @@ class PostieServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__.'/../stubs/PostieServiceProvider.php' => app_path('Providers/PostieServiceProvider.php'),
+                __DIR__ . '/../stubs/PostieServiceProvider.php' => app_path('Providers/PostieServiceProvider.php'),
             ], 'postie-provider');
 
             $this->publishes([
-                __DIR__.'/../config/postie.php' => config_path('postie.php'),
+                __DIR__ . '/../config/postie.php' => config_path('postie.php'),
             ], 'postie-config');
 
             $this->publishes([
-                __DIR__.'/../database/migrations' => database_path('migrations'),
+                __DIR__ . '/../database/migrations' => database_path('migrations'),
             ], 'postie-migrations');
         }
     }
