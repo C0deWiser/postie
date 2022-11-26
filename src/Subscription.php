@@ -6,6 +6,7 @@ use Closure;
 use Codewiser\Postie\Collections\ChannelCollection;
 use Illuminate\Contracts\Auth\Authenticatable as User;
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Contracts\Mail\Mailable;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
@@ -72,8 +73,10 @@ class Subscription implements Arrayable
 
     /**
      * Get notification for previewing.
+     *
+     * @return Notification|Mailable|array|mixed
      */
-    public function getNotificationForPreviewing(string $channel, User $notifiable): ?Notification
+    public function getNotificationForPreviewing(string $channel, User $notifiable)
     {
         return $this->preview ? call_user_func($this->preview, $channel, $notifiable) : null;
     }
@@ -126,7 +129,7 @@ class Subscription implements Arrayable
         }
 
         foreach ($channels as $i => $channel) {
-            if (is_string($channels)) {
+            if (is_string($channel)) {
                 $channels[$i] = new Channel($channel);
             }
         }
