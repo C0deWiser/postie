@@ -9,11 +9,8 @@ class NotificationDefinition extends Subscription
 {
     /**
      * Make definition using notification class name.
-     *
-     * @param string $notification
-     * @return Subscription
      */
-    public static function make(string $notification): Subscription
+    public static function make(string $notification): NotificationDefinition
     {
         return new static($notification);
     }
