@@ -7,14 +7,20 @@
             {{ channel.title }}
         </button>
         <div class="dropdown-menu">
-            <h6 class="dropdown-header" v-if="channel.subtitle">{{ channel.subtitle }}</h6>
-            <button class="dropdown-item"
+            <h6 class="dropdown-header">{{ this.getDescription(channel) }}</h6>
+            <div class="dropdown-divider"></div>
+
+            <button v-if="channel.available" class="dropdown-item"
                     :class="this.getToggleClass(channel)"
                     type="button"
                     @click="$emit('toggle')">{{ this.getCaption(channel) }}</button>
-            <div class="dropdown-divider" v-if="channel.previewing"></div>
+
             <a class="dropdown-item" v-if="channel.previewing"
                target="_blank" :href="channel.previewing">{{ $root.$gettext('subscriptions.preview') }}</a>
+
+            <div class="dropdown-divider" v-if="channel.subtitle"></div>
+            <p class="pr-4 pl-4 pt-2 pb-2 mb-0 text-muted"
+               v-if="channel.subtitle"><small>{{ channel.subtitle }}</small></p>
         </div>
     </div>
 </template>
@@ -55,7 +61,7 @@ export default {
          * @param {Object} channel
          * @returns {string}
          */
-        getTitle(channel) {
+        getDescription(channel) {
             if (channel.available) {
                 if (channel.forced) {
                     return channel.status ?

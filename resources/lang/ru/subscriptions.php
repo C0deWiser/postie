@@ -11,5 +11,5 @@ return [
     'unsubscribed' => 'Вы не подписаны',
     'forceSubscribed' => 'Вы не можете отписаться',
     'forceUnsubscribed' => 'Вы не можете подписаться',
-    'unavailableChannel' => 'Способ недоступен',
+    'unavailableChannel' => 'Этот способ вам недоступен',
 ];

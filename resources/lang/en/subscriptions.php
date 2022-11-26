@@ -8,8 +8,8 @@ return [
     'subscribe' => 'Subscribe',
     'unsubscribe' => 'Unsubscribe',
     'subscribed' => 'You subscribed',
-    'unsubscribed' => 'You unsubscribed',
+    'unsubscribed' => 'You not subscribed',
     'forceSubscribed' => 'You can not unsubscribe',
     'forceUnsubscribed' => 'You can not subscribe',
-    'unavailableChannel' => 'Channel unavailable',
+    'unavailableChannel' => 'Channel unavailable for you',
 ];
