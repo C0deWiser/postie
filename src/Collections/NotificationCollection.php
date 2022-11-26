@@ -77,7 +77,8 @@ class NotificationCollection extends Collection
 
                 $subscription = $subscriptions->firstByNotification($definition->getClassName());
 
-                $row['channels'] = $definition->getChannels()->getResolvedByNotifiableSubscription($notifiable, $subscription);
+                $row['channels'] = $definition->getChannels()
+                    ->getResolvedByNotifiableSubscription($notifiable, $definition, $subscription);
 
                 return $row;
             })

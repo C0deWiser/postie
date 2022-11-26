@@ -1,16 +1,21 @@
 <template>
-    <i
-        class="channel"
-        :class="[
-                    channel.icon,
-                    {active:channel.status},
-                    {forced:channel.forced},
-                    {not_available:!channel.available}
-                ]"
-        :title="getTitle(channel)"
-        v-if="!channel.hidden"
-        @click="$emit('toggle')"
-    ></i>
+    <div class="btn-group mr-1" v-if="!channel.hidden && channel.available">
+        <button type="button" class="btn btn-sm dropdown-toggle" :class="this.getColor(channel)"
+                data-toggle="dropdown" aria-expanded="false">
+            <i :class="channel.icon"></i>
+            {{ channel.title }}
+        </button>
+        <div class="dropdown-menu">
+            <h6 class="dropdown-header">{{ this.getTitle(channel) }}</h6>
+            <button class="dropdown-item"
+                    :class="this.getToggleClass(channel)"
+                    type="button"
+                    @click="$emit('toggle')">{{ this.getCaption(channel) }}</button>
+            <div class="dropdown-divider" v-if="channel.previewing"></div>
+            <a class="dropdown-item" v-if="channel.previewing"
+               target="_blank" :href="channel.previewing">Preview</a>
+        </div>
+    </div>
 </template>
 
 <script>
@@ -24,6 +29,23 @@ export default {
         },
     },
     methods: {
+        getCaption(channel) {
+            return channel.status ? 'Unsubscribe' : 'Subscribe';
+        },
+        getToggleClass(channel) {
+            return channel.forced ? 'disabled' : '';
+        },
+        getColor(channel) {
+            if (channel.available) {
+                if (channel.status) {
+                    return 'btn-primary';
+                } else {
+                    return 'btn-secondary';
+                }
+            } else {
+                return 'btn-danger';
+            }
+        },
         /**
          * Get title.
          *
@@ -31,17 +53,14 @@ export default {
          * @returns {string}
          */
         getTitle(channel) {
-
-            let title = channel.name.charAt(0).toUpperCase() + channel.name.slice(1);
-
             if (channel.available) {
                 if (channel.forced) {
-                    return title + ' channel is forced to be ' + (channel.status ? 'enabled' : 'disabled');
+                    return 'You are forced to be ' + (channel.status ? 'subscribed' : 'unsubscribed');
                 } else {
-                    return title + ' channel is ' + (channel.status ? 'enabled' : 'disabled');
+                    return 'You are ' + (channel.status ? 'subscribed' : 'unsubscribed');
                 }
             } else {
-                return 'No route to the ' + title + ' channel';
+                return 'Unavailable channel';
             }
         },
     },

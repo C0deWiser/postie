@@ -1,6 +1,10 @@
 {
-    "/app.js": "/app.js?id=11033dffd7552c2425d898d2f4ce5850",
-    "/bootstrap-icons.css": "/bootstrap-icons.css?id=c868efc2d9fb57d6480d6736e12b2a60",
-    "/app.css": "/app.css?id=7e7646c291047719afa092bb8a436a9a",
-    "/hypnotize.png": "/hypnotize.png?id=d37c9b2a0ae233efbb2857547247a535"
+    "/app.js": "/app.js?id=9ddab6660bb9f8262ab7da14596bad7d",
+    "/bootstrap-icons.css": "/bootstrap-icons.css?id=7902bd660f22847b20fb47aff8ea574c",
+    "/app.css": "/app.css?id=9c9bb4b906a9abc4a000764501a5685f",
+    "/app.js.LICENSE.txt": "/app.js.LICENSE.txt?id=d0a03f2bbb63a666985675c5c12bb027",
+    "/fonts/vendor/bootstrap-icons/bootstrap-icons.woff": "/fonts/vendor/bootstrap-icons/bootstrap-icons.woff?id=75a5ad289ed7e74a46ea3869d1cf387b",
+    "/fonts/vendor/bootstrap-icons/bootstrap-icons.woff2": "/fonts/vendor/bootstrap-icons/bootstrap-icons.woff2?id=ce12da53ac38d05bd37771470229fe87",
+    "/hypnotize.png": "/hypnotize.png?id=d37c9b2a0ae233efbb2857547247a535",
+    "/mix-manifest.json": "/mix-manifest.json?id=64a42653ef7e1434121ae351d4c92b30"
 }
