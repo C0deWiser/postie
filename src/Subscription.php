@@ -9,12 +9,13 @@ use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\Mail\Mailable;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\LazyCollection;
 use Illuminate\Support\Str;
 
 class Subscription implements Arrayable
 {
     protected string $class_name;
-    protected ?Closure $audienceBuilder = null;
+    protected ?Closure $audience = null;
     protected array $channels = [];
     protected string $title;
     protected ?Closure $preview = null;
@@ -50,9 +51,9 @@ class Subscription implements Arrayable
     /**
      * Get Builder that holds notification audience.
      */
-    public function getAudienceBuilder(): ?Builder
+    public function getAudience(): ?Builder
     {
-        return $this->audienceBuilder ? call_user_func($this->audienceBuilder) : null;
+        return is_callable($this->audience) ? call_user_func($this->audience) : null;
     }
 
     /**
@@ -78,7 +79,7 @@ class Subscription implements Arrayable
      */
     public function getNotificationForPreviewing(string $channel, User $notifiable)
     {
-        return $this->preview ? call_user_func($this->preview, $channel, $notifiable) : null;
+        return is_callable($this->preview) ? call_user_func($this->preview, $channel, $notifiable) : null;
     }
 
     /**
@@ -86,13 +87,11 @@ class Subscription implements Arrayable
      */
     public function hasNotificationForPreviewing(): bool
     {
-        return !is_null($this->preview);
+        return is_callable($this->preview);
     }
 
     /**
-     * Define Builder that holds notification possible audience. Closure should return Eloquent Builder.
-     *
-     * @deprecated
+     * @deprecated use for()
      */
     public function audience(Closure $audienceBuilder): self
     {
@@ -100,11 +99,12 @@ class Subscription implements Arrayable
     }
 
     /**
-     * Define Builder that holds notification possible audience. Closure should return Eloquent Builder.
+     * Define notification possible audience.
+     * Closure should return Builder with notifiable objects.
      */
-    public function for(Closure $audienceBuilder): self
+    public function for(Closure $audience): self
     {
-        $this->audienceBuilder = $audienceBuilder;
+        $this->audience = $audience;
         return $this;
     }
 

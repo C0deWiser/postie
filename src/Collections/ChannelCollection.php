@@ -19,9 +19,18 @@ class ChannelCollection extends Collection
     public function find(string $channel): Channel
     {
         return $this
-            ->sole(function (Channel $definition) use ($channel) {
-                return $definition->getName() === $channel;
-            });
+            ->sole(
+                fn(Channel $definition) => $definition->getName() === $channel
+            );
+    }
+
+    public function names(): array
+    {
+        return $this
+            ->map(
+                fn(Channel $channel) => $channel->getName()
+            )
+            ->toArray();
     }
 
     /**

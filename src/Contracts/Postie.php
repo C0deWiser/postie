@@ -42,13 +42,14 @@ interface Postie
     public function toggleUserNotificationChannels($notifiable, string $notification, array $channels): Subscription;
 
     /**
-     * Send notification to audience. Use callback to modify audience builder.
+     * Send notification to the subscribed audience.
+     * Use callback to modify audience Builder.
+     * Callback may return Builder or LazyCollection.
      *
-     * Or send notification to the exact notifiable, passed by second argument.
+     * If notification is not registered in Postie, second argument is required.
      *
      * @param Notification $notification
-     * @param mixed $closure
-     * @return void
+     * @param callable|null $callback
      */
-    public function send(Notification $notification, $closure = null);
+    public function send(Notification $notification, callable $callback = null);
 }

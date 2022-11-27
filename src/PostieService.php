@@ -8,12 +8,14 @@ use Codewiser\Postie\Contracts\Postie;
 use Codewiser\Postie\Events\UserSubscribe;
 use Codewiser\Postie\Events\UserUnsubscribe;
 use Codewiser\Postie\Models\Subscription;
+use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\ItemNotFoundException;
+use Illuminate\Support\LazyCollection;
 use Illuminate\Support\MultipleItemsFoundException;
 
 class PostieService implements Postie
@@ -55,11 +57,14 @@ class PostieService implements Postie
      */
     public function via(string $notification, $notifiable): array
     {
-        if ($notifiable instanceof AnonymousNotifiable) {
-            return array_keys($notifiable->routes);
-        }
-
         $notificationDefinition = $this->getNotifications()->find($notification);
+
+        if ($notifiable instanceof AnonymousNotifiable) {
+            return array_intersect(
+                array_keys($notifiable->routes),
+                $notificationDefinition->getChannels()->names()
+            );
+        }
 
         /** @var Subscription $subscription */
         $subscription = Subscription::for($notifiable, $notification)->first();
@@ -129,37 +134,43 @@ class PostieService implements Postie
         return $subscription;
     }
 
-    public function send(Notification $notification, $closure = null)
+    public function send(Notification $notification, $callback = null)
     {
         $audience = null;
 
         try {
             $definition = $this->getNotifications()->find(get_class($notification));
 
-            if ($builder = $definition->getAudienceBuilder()) {
-                $audience = (is_callable($closure) || $closure instanceof Closure)
-                    // Modify predefined audience builder with callback
-                    ? call_user_func($closure, $builder)
-                    // Use predefined audience builder
-                    : $builder;
+            if ($collection = $definition->getAudience()) {
+                $audience = is_callable($callback)
+                    // Modify predefined audience collection with callback
+                    ? call_user_func($callback, $collection)
+                    // Use predefined audience collection
+                    : $collection;
             }
 
         } catch (ItemNotFoundException|MultipleItemsFoundException $exception) {
             // Fallback
 
-            $audience = (is_callable($closure) || $closure instanceof Closure)
-                // Get notifiable(s) (or its builder) from callback
-                ? call_user_func($closure)
+            $audience = is_callable($callback)
+                // Get notifiable(s) (or its collection) from callback
+                ? call_user_func($callback)
                 // Get notifiable(s) from argument
-                : $closure;
+                : $callback;
         }
 
-        if ($audience instanceof \Illuminate\Contracts\Database\Query\Builder) {
-            $audience = $audience->get();
+        if ($audience instanceof Builder) {
+            $audience = $audience->lazy();
         }
 
-        if ($audience) {
-            \Illuminate\Support\Facades\Notification::send($audience, $notification);
+        if ($audience instanceof LazyCollection) {
+            $audience->each(
+                fn($notifiable) => $notifiable->notify($notification)
+            );
+        } elseif (method_exists($audience, 'notify')) {
+            $audience->notify($notification);
         }
+
+        return $audience;
     }
 }
