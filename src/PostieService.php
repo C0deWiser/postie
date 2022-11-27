@@ -9,6 +9,7 @@ use Codewiser\Postie\Events\UserSubscribe;
 use Codewiser\Postie\Events\UserUnsubscribe;
 use Codewiser\Postie\Models\Subscription;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\File;
@@ -49,11 +50,15 @@ class PostieService implements Postie
      * Get notification channels for the given notifiable.
      *
      * @param string $notification
-     * @param Model|Notifiable $notifiable
+     * @param Model|Notifiable|AnonymousNotifiable $notifiable
      * @return array
      */
     public function via(string $notification, $notifiable): array
     {
+        if ($notifiable instanceof AnonymousNotifiable) {
+            return array_keys($notifiable->routes);
+        }
+
         $notificationDefinition = $this->getNotifications()->find($notification);
 
         /** @var Subscription $subscription */
