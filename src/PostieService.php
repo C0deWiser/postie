@@ -144,7 +144,7 @@ class PostieService implements Postie
             if ($collection = $definition->getAudience()) {
                 $audience = is_callable($callback)
                     // Modify predefined audience collection with callback
-                    ? call_user_func($callback, $collection)
+                    ? call_user_func($callback, $collection, $notification)
                     // Use predefined audience collection
                     : $collection;
             }
@@ -154,7 +154,7 @@ class PostieService implements Postie
 
             $audience = is_callable($callback)
                 // Get notifiable(s) (or its collection) from callback
-                ? call_user_func($callback)
+                ? call_user_func($callback, $notification)
                 // Get notifiable(s) from argument
                 : $callback;
         }
@@ -167,7 +167,7 @@ class PostieService implements Postie
             $audience->each(
                 fn($notifiable) => $notifiable->notify($notification)
             );
-        } elseif (method_exists($audience, 'notify')) {
+        } elseif ($audience && method_exists($audience, 'notify')) {
             $audience->notify($notification);
         }
 

@@ -4,9 +4,7 @@ namespace Codewiser\Postie;
 
 use Codewiser\Postie\Console\InstallCommand;
 use Codewiser\Postie\Console\PublishCommand;
-use Codewiser\Postie\Contracts\Channelizationable;
 use Codewiser\Postie\Contracts\Postie;
-use Codewiser\Postie\Contracts\PostieAssets;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 

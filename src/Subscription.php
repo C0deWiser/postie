@@ -18,6 +18,7 @@ class Subscription implements Arrayable
     protected ?Closure $audience = null;
     protected array $channels = [];
     protected string $title;
+    protected ?string $description = null;
     protected ?Closure $preview = null;
 
     /**
@@ -65,11 +66,19 @@ class Subscription implements Arrayable
     }
 
     /**
-     * Get notification description.
+     * Get notification title.
      */
     public function getTitle(): string
     {
         return $this->title;
+    }
+
+    /**
+     * Get notification description.
+     */
+    public function getDescription(): ?string
+    {
+        return $this->description;
     }
 
     /**
@@ -105,15 +114,27 @@ class Subscription implements Arrayable
     public function for(Closure $audience): self
     {
         $this->audience = $audience;
+
+        return $this;
+    }
+
+    /**
+     * Set notification human readable title.
+     */
+    public function title(string $title): self
+    {
+        $this->title = $title;
+
         return $this;
     }
 
     /**
      * Set notification human readable description.
      */
-    public function title(string $title): self
+    public function description(string $description): self
     {
-        $this->title = $title;
+        $this->description = $description;
+
         return $this;
     }
 
@@ -156,6 +177,7 @@ class Subscription implements Arrayable
         return [
             'notification' => $this->getClassName(),
             'title' => $this->getTitle(),
+            'description' => $this->getDescription(),
             'channels' => $this->getChannels()->toArray(),
             'preview' => $this->hasNotificationForPreviewing(),
         ];

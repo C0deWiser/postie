@@ -16,6 +16,11 @@
                     :key="notificationDefinition.notification">
                     <td>
                         {{ notificationDefinition.title }} <br>
+
+                        <p v-if="notificationDefinition.description">
+                        <small class="text-muted">{{ notificationDefinition.description }}</small>
+                        </p>
+
                         <small class="text-muted">{{ notificationDefinition.notification }}</small>
                     </td>
                     <td class="text-right table-fit">
