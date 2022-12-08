@@ -16,11 +16,19 @@ class HomeController extends Controller
      */
     public function index(Request $request, PostieService $postie)
     {
-        $possibleNotifications = $postie->getUserNotifications($request->user());
+        $subscriptions = $postie->getUserNotifications($request->user());
 
-        if (!$possibleNotifications) {
+        if (!$subscriptions) {
             abort(404);
         }
+
+        $groups = collect($subscriptions)
+            // Extract groups from subscriptions
+            ->map(function ($subscription) {
+                return $subscription['group'];
+            })
+            ->unique()
+            ->values();
 
         return view('postie::layout', [
             'assetsAreCurrent' => $postie->assetsAreCurrent(),
@@ -28,6 +36,7 @@ class HomeController extends Controller
             'cssBootstrapIcons' => 'bootstrap-icons.css',
             'postieScriptVariables' => $postie->scriptVariables(),
             'isDownForMaintenance' => App::isDownForMaintenance(),
+            'groups' => $groups,
             'trans' => Arr::dot([
                 'subscriptions' => Lang::get('postie::subscriptions')
             ])

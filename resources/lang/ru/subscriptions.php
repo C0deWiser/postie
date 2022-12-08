@@ -12,4 +12,5 @@ return [
     'forceSubscribed' => 'Вы не можете отписаться',
     'forceUnsubscribed' => 'Вы не можете подписаться',
     'unavailableChannel' => 'Этот способ вам недоступен',
+    'fallbackGroup' => 'Другое',
 ];

@@ -16,8 +16,19 @@ class SubscriptionController extends Controller
      */
     public function index(Request $request, Postie $postie)
     {
+        $group = $request->input('group');
+
+        $subscriptions = collect($postie->getUserNotifications($request->user()))
+            ->filter(function ($item) use ($group) {
+                if (!$group) {
+                    return true;
+                }
+
+                return $item['group']['shortcode'] == $group;
+            });
+
         return response()->json([
-            'notification_definitions' => $postie->getUserNotifications($request->user()),
+            'subscriptions' => $subscriptions,
         ]);
     }
 

@@ -8,27 +8,27 @@
                 <thead>
                 <tr>
                     <th>{{ $root.$gettext('subscriptions.notification') }}</th>
-                    <th>{{ $root.$gettext('subscriptions.channels') }}</th>
+                    <th class="text-right">{{ $root.$gettext('subscriptions.channels') }}</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr v-for="notificationDefinition in notificationDefinitions"
-                    :key="notificationDefinition.notification">
+                <tr v-for="subscription in subscriptions"
+                    :key="subscription.notification">
                     <td>
-                        {{ notificationDefinition.title }} <br>
+                        {{ subscription.title }} <br>
 
-                        <p v-if="notificationDefinition.description">
-                        <small class="text-muted">{{ notificationDefinition.description }}</small>
+                        <p v-if="subscription.description">
+                        <small class="text-muted">{{ subscription.description }}</small>
                         </p>
 
-                        <small class="text-muted">{{ notificationDefinition.notification }}</small>
+                        <small class="text-muted">{{ subscription.notification }}</small>
                     </td>
                     <td class="text-right table-fit">
                         <channel-btn
-                            v-for="(channel, index) in notificationDefinition.channels"
+                            v-for="(channel, index) in subscription.channels"
                             :key="index"
                             :channel="channel"
-                            @toggle="toggleChannel(notificationDefinition, channel)"
+                            @toggle="toggleChannel(subscription, channel)"
                         ></channel-btn>
                     </td>
                 </tr>
@@ -44,7 +44,7 @@ export default {
         return {
             ready: false,
             error: undefined,
-            notificationDefinitions: [],
+            subscriptions: [],
         };
     },
     mounted() {
@@ -61,9 +61,9 @@ export default {
          * Загрузка данных
          */
         fetchData() {
-            this.$http.get(Postie.basePath + '/api/subscriptions')
+            this.$http.get(Postie.basePath + '/api/subscriptions' + location.search)
                 .then(response => {
-                    this.notificationDefinitions = response.data.notification_definitions;
+                    this.subscriptions = response.data.subscriptions;
                     this.error = undefined;
                     this.ready = true;
 
@@ -76,10 +76,10 @@ export default {
         /**
          * Toggle notification channel.
          *
-         * @param {Object} notificationDefinition Notification.
+         * @param {Object} subscription Notification.
          * @param {Object} channel Channel.
          */
-        toggleChannel(notificationDefinition, channel) {
+        toggleChannel(subscription, channel) {
             if (channel.forced) {
                 return;
             }
@@ -89,7 +89,7 @@ export default {
             let channels = {};
             channels[channel.name] = !channel.status;
             let data = {
-                notification: notificationDefinition.notification,
+                notification: subscription.notification,
                 channels: channels,
             }
 

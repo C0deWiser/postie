@@ -13,13 +13,26 @@ abstract class PostieApplicationServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        PostieService::$notifications = $this->notifications();
+        $definitions = [];
+
+        foreach ($this->notifications() as $notification) {
+            if ($notification instanceof Group) {
+                foreach ($notification->getSubscriptions() as $subscription) {
+                    $definitions[] = $subscription
+                        ->group($notification);
+                }
+            } else {
+                $definitions[] = $notification;
+            }
+        }
+
+        PostieService::$notifications = $definitions;
     }
 
     /**
-     * Return an array of NotificationDefinition
+     * Return an array of Subscriptions or Groups of Subscriptions
      *
-     * @return array
+     * @return array<Subscription, Group>
      */
     abstract public function notifications(): array;
 }

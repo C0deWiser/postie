@@ -20,6 +20,7 @@ class Subscription implements Arrayable
     protected string $title;
     protected ?string $description = null;
     protected ?Closure $preview = null;
+    protected ?Group $group = null;
 
     /**
      * Make definition using notification class name.
@@ -175,6 +176,7 @@ class Subscription implements Arrayable
     public function toArray(): array
     {
         return [
+            'group' => $this->getGroup() ? $this->getGroup()->toArray() : null,
             'notification' => $this->getClassName(),
             'title' => $this->getTitle(),
             'description' => $this->getDescription(),
@@ -213,5 +215,25 @@ class Subscription implements Arrayable
                 return $channelDefinition->getName();
             })
             ->toArray();
+    }
+
+    /**
+     * Get group definition.
+     */
+    public function getGroup(): ?Group
+    {
+        return $this->group;
+    }
+
+    /**
+     * Group subscription.
+     *
+     * @param string|Group $group
+     */
+    public function group($group): self
+    {
+        $this->group = $group instanceof Group ? $group : new Group($group);
+
+        return $this;
     }
 }

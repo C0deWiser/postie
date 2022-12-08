@@ -12,4 +12,5 @@ return [
     'forceSubscribed' => 'You can not unsubscribe',
     'forceUnsubscribed' => 'You can not subscribe',
     'unavailableChannel' => 'Channel unavailable for you',
+    'fallbackGroup' => 'Other',
 ];

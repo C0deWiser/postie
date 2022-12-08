@@ -72,6 +72,32 @@ class NotificationCollection extends Collection
         $subscriptions = Subscription::for($notifiable, $this->classNames())->get();
 
         return $this
+            // Put undefined group to the bottom
+            ->sort(function (SubscriptionDefinition $a, SubscriptionDefinition $b) {
+                $a = $a->getGroup() ? $a->getGroup()->getName() : null;
+                $b = $b->getGroup() ? $b->getGroup()->getName() : null;
+
+                if (is_null($a) && is_null($b)) {
+                    return 0;
+                } elseif (is_null($a)) {
+                    return 1;
+                } elseif (is_null($b)) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            })
+            // Drop resorted keys
+            ->values()
+            // Set fallback name to the undefined group
+            ->map(function (SubscriptionDefinition $item) {
+                if (!$item->getGroup()) {
+                    $item->group(__('postie::subscriptions.fallbackGroup'));
+                }
+
+                return $item;
+            })
+            // Add user channels
             ->map(function (SubscriptionDefinition $definition) use ($notifiable, $subscriptions) {
                 $row = $definition->toArray();
 
