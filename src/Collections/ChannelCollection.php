@@ -50,7 +50,7 @@ class ChannelCollection extends Collection
                 $defaults['status'] = $definition->getStatus($notifiable, $userPreferences);
                 $defaults['available'] = (bool)$notifiable->routeNotificationFor($definition->getName());
 
-                if ($notification->hasNotificationForPreviewing()) {
+                if ($notification->hasPreview()) {
                     $defaults['previewing'] = route('postie.preview', [
                         'channel' => $definition->getName(),
                         'notification' => $notification->getClassName()

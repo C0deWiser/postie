@@ -43,7 +43,7 @@
                 <ul class="nav flex-column">
                     @foreach($groups as $group)
                     <li class="nav-item">
-                        <router-link active-class="active" to="/subscriptions?group={{ $group['shortcode'] }}" class="nav-link d-flex align-items-center">
+                        <router-link exact-active-class="active" to="/subscriptions?group={{ $group['shortcode'] }}" class="nav-link d-flex align-items-center">
                             <i class="bi bi-{{ $group['icon'] }} mr-2"></i>
                             <span>{{ $group['name'] }}</span>
                         </router-link>

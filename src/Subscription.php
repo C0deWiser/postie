@@ -87,7 +87,7 @@ class Subscription implements Arrayable
      *
      * @return Notification|Mailable|array|mixed
      */
-    public function getNotificationForPreviewing(string $channel, User $notifiable)
+    public function getPreview(string $channel, User $notifiable)
     {
         return is_callable($this->preview) ? call_user_func($this->preview, $channel, $notifiable) : null;
     }
@@ -95,7 +95,7 @@ class Subscription implements Arrayable
     /**
      * Check if previewing notification is defined.
      */
-    public function hasNotificationForPreviewing(): bool
+    public function hasPreview(): bool
     {
         return is_callable($this->preview);
     }
@@ -181,7 +181,7 @@ class Subscription implements Arrayable
             'title' => $this->getTitle(),
             'description' => $this->getDescription(),
             'channels' => $this->getChannels()->toArray(),
-            'preview' => $this->hasNotificationForPreviewing(),
+            'preview' => $this->hasPreview(),
         ];
     }
 
