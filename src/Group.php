@@ -67,7 +67,11 @@ class Group implements Arrayable
     public function add(Subscription $subscription): self
     {
         if ($subscription->getChannels()->isEmpty()) {
-            $subscription->via($this->getChannels()->toArray());
+            $channels = [];
+            foreach($this->getChannels() as $channel) {
+                $channels[] = $channel;
+            }
+            $subscription->via($channels);
         }
 
         if (!$subscription->hasAudience() && $this->hasAudience()) {
