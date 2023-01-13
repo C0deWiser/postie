@@ -2,8 +2,6 @@
 
 namespace Codewiser\Postie\Traits;
 
-use Codewiser\Postie\Subscription;
-
 trait HasTitle
 {
     protected string $title;
@@ -19,7 +17,7 @@ trait HasTitle
     /**
      * Set notification human readable title.
      */
-    public function title(string $title): Subscription
+    public function title(string $title): self
     {
         $this->title = $title;
 

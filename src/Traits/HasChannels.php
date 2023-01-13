@@ -4,7 +4,6 @@ namespace Codewiser\Postie\Traits;
 
 use Codewiser\Postie\Channel;
 use Codewiser\Postie\Collections\ChannelCollection;
-use Codewiser\Postie\Subscription;
 
 trait HasChannels
 {
@@ -15,7 +14,7 @@ trait HasChannels
      *
      * @param Channel|string|array $channels
      */
-    public function via($channels): Subscription
+    public function via($channels): self
     {
         if (!is_array($channels)) {
             $channels = func_get_args();

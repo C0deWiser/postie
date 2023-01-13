@@ -3,7 +3,6 @@
 namespace Codewiser\Postie\Traits;
 
 use Closure;
-use Codewiser\Postie\Subscription;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 
 trait HasAudience
@@ -14,7 +13,7 @@ trait HasAudience
      * Define notification possible audience.
      * Closure should return Builder with notifiable objects.
      */
-    public function for(Closure $audience): Subscription
+    public function for(Closure $audience): self
     {
         $this->audience = $audience;
 
@@ -24,7 +23,7 @@ trait HasAudience
     /**
      * @deprecated use for()
      */
-    public function audience(Closure $audienceBuilder): Subscription
+    public function audience(Closure $audienceBuilder): self
     {
         return $this->for($audienceBuilder);
     }
