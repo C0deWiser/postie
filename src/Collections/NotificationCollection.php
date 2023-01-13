@@ -74,8 +74,8 @@ class NotificationCollection extends Collection
         return $this
             // Put undefined group to the bottom
             ->sort(function (SubscriptionDefinition $a, SubscriptionDefinition $b) {
-                $a = $a->getGroup() ? $a->getGroup()->getName() : null;
-                $b = $b->getGroup() ? $b->getGroup()->getName() : null;
+                $a = $a->getGroup() ? $a->getGroup()->getTitle() : null;
+                $b = $b->getGroup() ? $b->getGroup()->getTitle() : null;
 
                 if (is_null($a) && is_null($b)) {
                     return 0;

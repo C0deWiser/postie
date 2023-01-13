@@ -3,21 +3,20 @@
 namespace Codewiser\Postie;
 
 use Closure;
-use Codewiser\Postie\Collections\ChannelCollection;
+use Codewiser\Postie\Traits\HasAudience;
+use Codewiser\Postie\Traits\HasChannels;
+use Codewiser\Postie\Traits\HasTitle;
 use Illuminate\Contracts\Auth\Authenticatable as User;
-use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\Mail\Mailable;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\LazyCollection;
 use Illuminate\Support\Str;
 
 class Subscription implements Arrayable
 {
+    use HasChannels, HasAudience, HasTitle;
+
     protected string $class_name;
-    protected ?Closure $audience = null;
-    protected array $channels = [];
-    protected string $title;
     protected ?string $description = null;
     protected ?Closure $preview = null;
     protected ?Group $group = null;
@@ -51,30 +50,6 @@ class Subscription implements Arrayable
     }
 
     /**
-     * Get Builder that holds notification audience.
-     */
-    public function getAudience(): ?Builder
-    {
-        return is_callable($this->audience) ? call_user_func($this->audience) : null;
-    }
-
-    /**
-     * Get notification available channels.
-     */
-    public function getChannels(): ChannelCollection
-    {
-        return ChannelCollection::make($this->channels ?? []);
-    }
-
-    /**
-     * Get notification title.
-     */
-    public function getTitle(): string
-    {
-        return $this->title;
-    }
-
-    /**
      * Get notification description.
      */
     public function getDescription(): ?string
@@ -101,62 +76,11 @@ class Subscription implements Arrayable
     }
 
     /**
-     * @deprecated use for()
-     */
-    public function audience(Closure $audienceBuilder): self
-    {
-        return $this->for($audienceBuilder);
-    }
-
-    /**
-     * Define notification possible audience.
-     * Closure should return Builder with notifiable objects.
-     */
-    public function for(Closure $audience): self
-    {
-        $this->audience = $audience;
-
-        return $this;
-    }
-
-    /**
-     * Set notification human readable title.
-     */
-    public function title(string $title): self
-    {
-        $this->title = $title;
-
-        return $this;
-    }
-
-    /**
      * Set notification human readable description.
      */
     public function description(string $description): self
     {
         $this->description = $description;
-
-        return $this;
-    }
-
-    /**
-     * Set notification available channels.
-     *
-     * @param Channel|string|array $channels
-     */
-    public function via($channels): self
-    {
-        if (!is_array($channels)) {
-            $channels = func_get_args();
-        }
-
-        foreach ($channels as $i => $channel) {
-            if (is_string($channel)) {
-                $channels[$i] = new Channel($channel);
-            }
-        }
-
-        $this->channels = $channels;
 
         return $this;
     }

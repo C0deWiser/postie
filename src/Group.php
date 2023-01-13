@@ -2,32 +2,28 @@
 
 namespace Codewiser\Postie;
 
+use Codewiser\Postie\Traits\HasAudience;
+use Codewiser\Postie\Traits\HasChannels;
+use Codewiser\Postie\Traits\HasTitle;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Str;
 
 class Group implements Arrayable
 {
-    protected string $name;
+    use HasChannels, HasAudience, HasTitle;
+
     protected string $icon;
     protected array $subscriptions;
 
-    public static function make(string $name, string $icon = 'asterisk'): Group
+    public static function make(string $title, string $icon = 'asterisk'): Group
     {
-        return new static($name, $icon);
+        return new static($title, $icon);
     }
 
-    public function __construct(string $name, string $icon = 'asterisk')
+    public function __construct(string $title, string $icon = 'asterisk')
     {
-        $this->name = $name;
+        $this->title = $title;
         $this->icon = $icon;
-    }
-
-    /**
-     * Get group name.
-     */
-    public function getName(): string
-    {
-        return $this->name;
     }
 
     /**
@@ -62,7 +58,7 @@ class Group implements Arrayable
 
     public function getShortcode(): string
     {
-        return Str::substr(md5($this->getName()), 0, 2);
+        return Str::substr(md5($this->getTitle()), 0, 2);
     }
 
     /**
@@ -70,6 +66,14 @@ class Group implements Arrayable
      */
     public function add(Subscription $subscription): self
     {
+        if ($subscription->getChannels()->isEmpty()) {
+            $subscription->via($this->getChannels()->toArray());
+        }
+
+        if (!$subscription->hasAudience() && $this->hasAudience()) {
+            $subscription->for($this->audience);
+        }
+
         $this->subscriptions[] = $subscription;
 
         return $this;
@@ -79,7 +83,7 @@ class Group implements Arrayable
     {
         return [
             'shortcode' => $this->getShortcode(),
-            'name' => $this->getName(),
+            'name' => $this->getTitle(),
             'icon' => $this->getIcon(),
         ];
     }
