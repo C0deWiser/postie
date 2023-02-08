@@ -13,7 +13,7 @@ class CreateSubscriptionsTable extends Migration
      */
     public function up()
     {
-        Schema::create('subscriptions', function (Blueprint $table) {
+        Schema::create(config('postie.table'), function (Blueprint $table) {
             $table->id();
             $table->morphs('notifiable');
             $table->string('notification');
@@ -31,6 +31,6 @@ class CreateSubscriptionsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('subscriptions');
+        Schema::dropIfExists(config('postie.table'));
     }
 }

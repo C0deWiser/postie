@@ -43,4 +43,15 @@ return [
         'web'
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Postie Subscriptions Table
+    |--------------------------------------------------------------------------
+    |
+    | This is the table where Postie stores user subscription preferences.
+    |
+    */
+
+    'table' => env('POSTIE_TABLE', 'subscriptions'),
+
 ];

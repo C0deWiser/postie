@@ -25,6 +25,11 @@ class Subscription extends Model
         'channels' => 'array',
     ];
 
+    public function getTable()
+    {
+        return config('postie.table');
+    }
+
     public function notifiable(): MorphTo
     {
         return $this->morphTo();
