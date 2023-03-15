@@ -35,7 +35,6 @@ class Channel implements Arrayable
         $this->hidden = $hidden;
 
         switch ($name) {
-            case 'mail':
             case 'skype':
             case 'slack':
             case 'steam':
@@ -48,6 +47,9 @@ class Channel implements Arrayable
             case 'whatsapp':
                 $this->icon($name);
                 break;
+            case 'mail':
+                $this->icon('envelope');
+                break;
             case 'sms':
                 $this->icon('chat');
                 break;
@@ -58,7 +60,7 @@ class Channel implements Arrayable
                 $this->icon('app-indicator');
                 break;
             default:
-                $this->icon('record-circle-fill');
+                $this->icon('record-circle');
                 break;
         }
     }
