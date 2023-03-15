@@ -18,28 +18,47 @@ class Channel implements Arrayable
     /**
      * Make definition with channel name.
      */
-    public static function via(string $name): Channel
+    public static function via(string $name, bool $active = true, bool $forced = false, bool $hidden = false): Channel
     {
-        return new static($name);
+        return new static($name, $active, $forced, $hidden);
     }
 
     /**
      * @param string $name Channel name.
      */
-    public function __construct(string $name)
+    public function __construct(string $name, bool $active = true, bool $forced = false, bool $hidden = false)
     {
         $this->name = $name;
         $this->title = (string)Str::of(class_basename($name))->snake()->studly();
+        $this->default = $active;
+        $this->forced = $forced;
+        $this->hidden = $hidden;
 
         switch ($name) {
             case 'mail':
-                $this->icon = 'bi bi-envelope-fill';
+            case 'skype':
+            case 'slack':
+            case 'steam':
+            case 'rocket':
+            case 'spotify':
+            case 'facebook':
+            case 'linkedin':
+            case 'mastodon':
+            case 'telegram':
+            case 'whatsapp':
+                $this->icon($name);
+                break;
+            case 'sms':
+                $this->icon('chat');
                 break;
             case 'database':
-                $this->icon = 'bi bi-layers-fill';
+                $this->icon('bell');
+                break;
+            case 'broadcast':
+                $this->icon('app-indicator');
                 break;
             default:
-                $this->icon = 'bi bi-record-circle-fill';
+                $this->icon('record-circle-fill');
                 break;
         }
     }

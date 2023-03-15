@@ -48,7 +48,7 @@ class ChannelCollection extends Collection
                     : null;
 
                 $defaults['status'] = $definition->getStatus($notifiable, $userPreferences);
-                $defaults['available'] = (bool)$notifiable->routeNotificationFor($definition->getName());
+                $defaults['available'] = $definition->getName() == 'broadcast' || (bool)$notifiable->routeNotificationFor($definition->getName());
 
                 if ($notification->hasPreview()) {
                     $defaults['previewing'] = route('postie.preview', [
