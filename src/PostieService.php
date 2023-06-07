@@ -20,10 +20,7 @@ use Illuminate\Support\MultipleItemsFoundException;
 
 class PostieService implements Postie
 {
-    /**
-     * @var array<Subscription>
-     */
-    public static array $notifications = [];
+    public static \Closure $notifications;
 
     public function assetsAreCurrent(): bool
     {
@@ -45,7 +42,7 @@ class PostieService implements Postie
 
     public function getNotifications(): NotificationCollection
     {
-        return NotificationCollection::make(self::$notifications);
+        return NotificationCollection::make(call_user_func(self::$notifications));
     }
 
     /**
