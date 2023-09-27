@@ -3,6 +3,9 @@
     "description": "Subscription management Laravel package",
     "keywords": ["subscription", "notifications", "laravel"],
     "license": "MIT",
+    "suggest": {
+        "codewiser/laravel-notifications": "Brings notification message contract"
+    },
     "authors": [
         {
             "name": "Michael Pogrebnikov",
