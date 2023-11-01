@@ -3,6 +3,7 @@
 namespace Codewiser\Postie\Http\Controllers;
 
 use Codewiser\Postie\Contracts\Postie;
+use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Support\ItemNotFoundException;
 use Illuminate\Support\MultipleItemsFoundException;
@@ -33,8 +34,8 @@ class PreviewingController extends Controller
         $previewing = $definition
             ->getPreview($channelName, $request->user());
 
-        if (is_array($previewing)) {
-            dd($previewing);
+        if ($previewing instanceof Renderable) {
+            return $previewing->render($request);
         }
 
         return $previewing;
