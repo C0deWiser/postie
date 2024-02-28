@@ -86,6 +86,12 @@ class PostieService implements Postie
 
         // Check if route available for the notifiable.
         return array_filter($activeChannels, function ($channel) use ($notifiable) {
+
+            if ($channel == 'broadcast') {
+                // Broadcast doesnt require routing
+                return true;
+            }
+
             return (bool)$notifiable->routeNotificationFor($channel);
         });
     }
