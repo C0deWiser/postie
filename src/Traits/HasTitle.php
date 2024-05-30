@@ -15,7 +15,7 @@ trait HasTitle
     }
 
     /**
-     * Set notification human readable title.
+     * Set notification human-readable title.
      */
     public function title(string $title): self
     {

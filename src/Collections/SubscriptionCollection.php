@@ -13,8 +13,6 @@ class SubscriptionCollection extends Collection
     public function firstByNotification(string $notification): ?Subscription
     {
         return $this
-            ->first(function (Subscription $subscription) use ($notification) {
-                return $subscription->notification === $notification;
-            });
+            ->first(fn(Subscription $subscription) => $subscription->notification === $notification);
     }
 }

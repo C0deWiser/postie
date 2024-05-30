@@ -20,20 +20,19 @@ class NotificationCollection extends Collection
     public function find(string $notification): SubscriptionDefinition
     {
         return $this
-            ->sole(function (SubscriptionDefinition $definition) use ($notification) {
-                return $definition->getClassName() === $notification;
-            });
+            ->sole(fn(SubscriptionDefinition $definition) => $definition->getClassName() === $notification);
     }
 
     /**
      * Find notification definition by index of definition.
+     *
+     * @throws ItemNotFoundException
+     * @throws MultipleItemsFoundException
      */
     public function findByIndex(int $searchIndex): ?SubscriptionDefinition
     {
         return $this
-            ->sole(function (SubscriptionDefinition $definition, $index) use ($searchIndex) {
-                return $index === $searchIndex;
-            });
+            ->sole(fn(SubscriptionDefinition $definition, $index) => $index === $searchIndex);
     }
 
     /**
@@ -42,9 +41,7 @@ class NotificationCollection extends Collection
     public function classNames(): array
     {
         return $this
-            ->map(function (SubscriptionDefinition $notificationDefinition) {
-                return $notificationDefinition->getClassName();
-            })
+            ->map(fn(SubscriptionDefinition $notificationDefinition) => $notificationDefinition->getClassName())
             ->toArray();
     }
 

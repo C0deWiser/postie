@@ -9,11 +9,13 @@ use Codewiser\Postie\Events\UserSubscribe;
 use Codewiser\Postie\Events\UserUnsubscribe;
 use Codewiser\Postie\Models\Subscription;
 use Illuminate\Contracts\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Illuminate\Support\ItemNotFoundException;
 use Illuminate\Support\LazyCollection;
 use Illuminate\Support\MultipleItemsFoundException;
@@ -144,31 +146,27 @@ class PostieService implements Postie
         try {
             $definition = $this->getNotifications()->find(get_class($notification));
 
-            if ($collection = $definition->getAudience()) {
+            if ($builder = $definition->getAudience()) {
                 $audience = is_callable($callback)
-                    // Modify predefined audience collection with callback
-                    ? call_user_func($callback, $collection, $notification)
-                    // Use predefined audience collection
-                    : $collection;
+                    // Modify predefined audience builder with a callback
+                    ? call_user_func($callback, $builder, $notification)
+                    // Use predefined audience builder
+                    : $builder;
             }
 
         } catch (ItemNotFoundException|MultipleItemsFoundException $exception) {
             // Fallback
 
             $audience = is_callable($callback)
-                // Get notifiable(s) (or its collection) from callback
+                // Get notifiable(s) (or its builder) from a callback
                 ? call_user_func($callback, $notification)
                 // Get notifiable(s) from argument
                 : $callback;
         }
 
         if ($audience instanceof Builder) {
-            $audience = $audience->lazy();
-        }
-
-        if ($audience instanceof LazyCollection) {
-            $audience->each(
-                fn($notifiable) => $notifiable->notify($notification)
+            $audience->chunk(100,
+                fn(Collection $audience) => NotificationFacade::send($audience, $notification)
             );
         } elseif ($audience && method_exists($audience, 'notify')) {
             $audience->notify($notification);

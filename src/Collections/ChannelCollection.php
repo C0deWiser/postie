@@ -19,17 +19,13 @@ class ChannelCollection extends Collection
     public function find(string $channel): Channel
     {
         return $this
-            ->sole(
-                fn(Channel $definition) => $definition->getName() === $channel
-            );
+            ->sole(fn(Channel $definition) => $definition->getName() === $channel);
     }
 
     public function names(): array
     {
         return $this
-            ->map(
-                fn(Channel $channel) => $channel->getName()
-            )
+            ->map(fn(Channel $channel) => $channel->getName())
             ->toArray();
     }
 
@@ -48,7 +44,8 @@ class ChannelCollection extends Collection
                     : null;
 
                 $defaults['status'] = $definition->getStatus($notifiable, $userPreferences);
-                $defaults['available'] = $definition->getName() == 'broadcast' || (bool)$notifiable->routeNotificationFor($definition->getName());
+                $defaults['available'] = $definition->getName() == 'broadcast'
+                    || (bool)$notifiable->routeNotificationFor($definition->getName());
 
                 if ($notification->hasPreview()) {
                     $defaults['previewing'] = route('postie.preview', [

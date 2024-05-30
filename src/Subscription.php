@@ -116,16 +116,14 @@ class Subscription implements Arrayable
     public function getUserChannels(array $userChannels = []): array
     {
         return $this->getChannels()
-            ->mapWithKeys(function (Channel $channelDefinition) use ($userChannels) {
-                return [
-                    $channelDefinition->getName() => $channelDefinition->getForced()
-                        ? $channelDefinition->getDefault()
-                        : (array_key_exists($channelDefinition->getName(), $userChannels)
-                            ? $userChannels[$channelDefinition->getName()]
-                            : $channelDefinition->getDefault()
-                        )
-                ];
-            })
+            ->mapWithKeys(fn(Channel $channelDefinition) => [
+                $channelDefinition->getName() => $channelDefinition->getForced()
+                    ? $channelDefinition->getDefault()
+                    : (array_key_exists($channelDefinition->getName(), $userChannels)
+                        ? $userChannels[$channelDefinition->getName()]
+                        : $channelDefinition->getDefault()
+                    )
+            ])
             ->toArray();
     }
 
@@ -135,9 +133,7 @@ class Subscription implements Arrayable
     public function getChannelNames(): array
     {
         return $this->getChannels()
-            ->map(function (Channel $channelDefinition) {
-                return $channelDefinition->getName();
-            })
+            ->map(fn(Channel $channelDefinition) => $channelDefinition->getName())
             ->toArray();
     }
 
