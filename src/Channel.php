@@ -45,22 +45,22 @@ class Channel implements Arrayable
             case 'mastodon':
             case 'telegram':
             case 'whatsapp':
-                $this->icon($name);
+                $this->icon = 'bi bi-'.$name;
                 break;
             case 'mail':
-                $this->icon('envelope');
+                $this->icon = 'bi bi-envelope';
                 break;
             case 'sms':
-                $this->icon('chat');
+                $this->icon = 'bi bi-chat';
                 break;
             case 'database':
-                $this->icon('bell');
+                $this->icon = 'bi bi-bell';
                 break;
             case 'broadcast':
-                $this->icon('app-indicator');
+                $this->icon = 'bi bi-app-indicator';
                 break;
             default:
-                $this->icon('record-circle');
+                $this->icon = 'bi bi-record-circle';
                 break;
         }
     }
@@ -126,8 +126,9 @@ class Channel implements Arrayable
      */
     public function title(string $title): self
     {
-        $this->title = $title;
-        return $this;
+        $clone = clone $this;
+        $clone->title = $title;
+        return $clone;
     }
 
     /**
@@ -135,8 +136,9 @@ class Channel implements Arrayable
      */
     public function subtitle(string $subtitle): self
     {
-        $this->subtitle = $subtitle;
-        return $this;
+        $clone = clone $this;
+        $clone->subtitle = $subtitle;
+        return $clone;
     }
 
     /**
@@ -144,8 +146,9 @@ class Channel implements Arrayable
      */
     public function default(bool $default): self
     {
-        $this->default = $default;
-        return $this;
+        $clone = clone $this;
+        $clone->default = $default;
+        return $clone;
     }
 
     /**
@@ -169,8 +172,9 @@ class Channel implements Arrayable
      */
     public function forced(bool $forced = true): self
     {
-        $this->forced = $forced;
-        return $this;
+        $clone = clone $this;
+        $clone->forced = $forced;
+        return $clone;
     }
 
     /**
@@ -178,8 +182,9 @@ class Channel implements Arrayable
      */
     public function hidden(bool $hidden = true): self
     {
-        $this->hidden = $hidden;
-        return $this;
+        $clone = clone $this;
+        $clone->hidden = $hidden;
+        return $clone;
     }
 
     /**
@@ -189,8 +194,9 @@ class Channel implements Arrayable
      */
     public function icon(string $icon): self
     {
-        $this->icon = 'bi bi-'.$icon;
-        return $this;
+        $clone = clone $this;
+        $clone->icon = 'bi bi-'.$icon;
+        return $clone;
     }
 
     /**
