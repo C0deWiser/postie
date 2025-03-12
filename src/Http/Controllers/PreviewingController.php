@@ -27,12 +27,12 @@ class PreviewingController extends Controller
             abort(404, "Channel {$channelName} Not Found");
         }
 
-        if (!$definition->hasPreview()) {
-            abort(404, "{$notification} has no preview configured");
-        }
-
         $previewing = $definition
             ->getPreview($channelName, $request->user());
+
+        if (!$previewing) {
+            abort(404, "{$notification} has no preview configured");
+        }
 
         if ($previewing instanceof Renderable) {
             return $previewing->render($request);
