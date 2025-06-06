@@ -20,7 +20,7 @@ class CreateSubscriptionsTable extends Migration
             $table->json('channels');
             $table->timestamps();
 
-            $table->unique(['notifiable_type', 'notifiable_id', 'notification']);
+            $table->unique(['notifiable_type', 'notifiable_id', 'notification'], 'once');
         });
     }
 
