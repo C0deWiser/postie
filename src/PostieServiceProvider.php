@@ -50,10 +50,25 @@ class PostieServiceProvider extends ServiceProvider
      */
     protected function registerRoutes()
     {
+        $middlewares = config('postie.middleware', 'web');
+        if (!is_array($middlewares)) {
+            $middlewares = [$middlewares];
+        }
+
+        $auth = false;
+        foreach ($middlewares as $middleware) {
+            if ($middleware === 'auth' || strpos($middleware, 'auth.') === 0) {
+                $auth = true;
+            }
+        }
+        if (!$auth) {
+            $middlewares[] = 'auth';
+        }
+
         Route::group([
             'domain' => config('postie.domain', null),
             'prefix' => config('postie.path'),
-            'middleware' => array_merge(config('postie.middleware', 'web'), ['auth']),
+            'middleware' => $middlewares,
             'as' => 'postie.',
         ], function () {
             $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
