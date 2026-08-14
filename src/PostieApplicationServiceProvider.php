@@ -19,8 +19,7 @@ abstract class PostieApplicationServiceProvider extends ServiceProvider
             foreach ($this->notifications() as $notification) {
                 if ($notification instanceof Group) {
                     foreach ($notification->getSubscriptions() as $subscription) {
-                        $definitions[] = $subscription
-                            ->group($notification);
+                        $definitions[] = $subscription->group($notification);
                     }
                 } else {
                     $definitions[] = $notification;
@@ -34,7 +33,7 @@ abstract class PostieApplicationServiceProvider extends ServiceProvider
     /**
      * Return an array of Subscriptions or Groups of Subscriptions
      *
-     * @return array<Subscription, Group>
+     * @return array<int, Subscription|Group>
      */
     abstract public function notifications(): array;
 }

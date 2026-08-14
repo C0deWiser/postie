@@ -19,7 +19,10 @@ class Subscription implements Arrayable
     protected string $class_name;
     protected ?string $description = null;
     protected ?Closure $preview = null;
-    protected ?Group $group = null;
+    /**
+     * @var array<int, Group>
+     */
+    protected array $groups = [];
 
     /**
      * Make definition using notification class name.
@@ -76,7 +79,7 @@ class Subscription implements Arrayable
     }
 
     /**
-     * Set notification human readable description.
+     * Set notification human-readable description.
      */
     public function description(string $description): self
     {
@@ -101,6 +104,9 @@ class Subscription implements Arrayable
     {
         return [
             'group' => $this->getGroup() ? $this->getGroup()->toArray() : null,
+            'groups' => $this->getGroups()
+                ? array_map(fn (Group $group) => $group->toArray(), $this->getGroups())
+                : null,
             'notification' => $this->getClassName(),
             'title' => $this->getTitle(),
             'description' => $this->getDescription(),
@@ -142,7 +148,17 @@ class Subscription implements Arrayable
      */
     public function getGroup(): ?Group
     {
-        return $this->group;
+        return $this->groups[0] ?? null;
+    }
+
+    /**
+     * Get group definition.
+     *
+     * @return array<int, Group>
+     */
+    public function getGroups(): array
+    {
+        return $this->groups;
     }
 
     /**
@@ -152,7 +168,7 @@ class Subscription implements Arrayable
      */
     public function group($group): self
     {
-        $this->group = $group instanceof Group ? $group : new Group($group);
+        $this->groups[] = $group instanceof Group ? $group : new Group($group);
 
         return $this;
     }

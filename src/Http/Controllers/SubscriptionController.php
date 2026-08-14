@@ -24,7 +24,9 @@ class SubscriptionController extends Controller
                     return true;
                 }
 
-                return $item['group']['shortcode'] == $group;
+                return array_filter($item['groups'],
+                    fn(array $g) => $g['shortcode'] == $group
+                );
             });
 
         return response()->json([

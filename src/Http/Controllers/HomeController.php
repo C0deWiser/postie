@@ -22,13 +22,14 @@ class HomeController extends Controller
             abort(404);
         }
 
-        $groups = collect($subscriptions)
-            // Extract groups from subscriptions
-            ->map(function ($subscription) {
-                return $subscription['group'];
-            })
-            ->unique()
-            ->values();
+        $groups = [];
+        foreach ($subscriptions as $subscription) {
+            $gs = $subscription['groups'];
+            $gs = is_array($gs) ? $gs : [$gs];
+            foreach ($gs as $g) {
+                $groups[$g['shortcode']] = $g;
+            }
+        }
 
         return view('postie::layout', [
             'assetsAreCurrent' => $postie->assetsAreCurrent(),
