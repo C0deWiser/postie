@@ -7,7 +7,7 @@ trait HasTitle
     protected string $title;
 
     /**
-     * Get notification title.
+     * Get title.
      */
     public function getTitle(): string
     {
@@ -15,9 +15,9 @@ trait HasTitle
     }
 
     /**
-     * Set notification human-readable title.
+     * Set human-readable title.
      */
-    public function title(string $title): self
+    public function title(string $title): static
     {
         $this->title = $title;
 

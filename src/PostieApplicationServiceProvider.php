@@ -8,12 +8,10 @@ abstract class PostieApplicationServiceProvider extends ServiceProvider
 {
     /**
      * Bootstrap any application services.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
-        PostieService::$notifications = function() {
+        PostieService::$definitions = function () {
             $definitions = [];
 
             foreach ($this->notifications() as $notification) {

@@ -1,7 +1,7 @@
 {
     "name": "codewiser/postie",
     "description": "Subscription management Laravel package",
-    "keywords": ["subscription", "notifications", "laravel"],
+    "keywords": ["subscription", "notifications", "Laravel"],
     "license": "MIT",
     "suggest": {
         "codewiser/laravel-notifications": "Brings notification message contract"
@@ -13,7 +13,7 @@
         }
     ],
     "require": {
-        "php": "^7.4|^8.0",
+        "php": "^8.1",
         "laravel/framework": ">=10.0"
     },
     "autoload": {
@@ -21,7 +21,7 @@
             "Codewiser\\Postie\\": "src"
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true,
     "extra": {
         "laravel": {

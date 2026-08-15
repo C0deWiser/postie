@@ -3,6 +3,7 @@
 namespace Codewiser\Postie;
 
 use Closure;
+use Codewiser\Postie\Collections\Groups;
 use Codewiser\Postie\Traits\HasAudience;
 use Codewiser\Postie\Traits\HasChannels;
 use Codewiser\Postie\Traits\HasTitle;
@@ -16,72 +17,48 @@ class Subscription implements Arrayable
 {
     use HasChannels, HasAudience, HasTitle;
 
-    protected string $class_name;
     protected ?string $description = null;
-    protected ?Closure $preview = null;
+    /**
+     * @var null|callable
+     */
+    protected $preview = null;
     /**
      * @var array<int, Group>
      */
     protected array $groups = [];
 
     /**
-     * Make definition using notification class name.
+     * Make subscription definition using notification class name.
      *
-     * @param string $notification
-     * @return Subscription
+     * @param  class-string<Notification>  $notification
      */
-    public static function to(string $notification): Subscription
+    public static function to(string $notification): static
     {
         return new static($notification);
     }
 
     /**
-     * @param string $notification notification class name.
+     * @param  class-string<Notification>  $notification  Notification class name.
      */
-    public function __construct(string $notification)
+    public function __construct(protected string $notification)
     {
-        $this->class_name = $notification;
-        $this->title = (string)Str::of(class_basename($notification))->snake()->studly();
+        $this->title = (string) Str::of(class_basename($notification))->snake()->studly();
     }
 
     /**
-     * Get notification class name.
+     * Put subscription to a group.
      */
-    public function getClassName(): string
+    public function group(Group|string $group): static
     {
-        return $this->class_name;
+        $this->groups[] = $group instanceof Group ? $group : new Group($group);
+
+        return $this;
     }
 
     /**
-     * Get notification description.
+     * Set subscription human-readable description.
      */
-    public function getDescription(): ?string
-    {
-        return $this->description;
-    }
-
-    /**
-     * Get notification for previewing.
-     *
-     * @return Notification|Mailable|array|mixed
-     */
-    public function getPreview(string $channel, User $notifiable)
-    {
-        return is_callable($this->preview) ? call_user_func($this->preview, $channel, $notifiable) : null;
-    }
-
-    /**
-     * Check if previewing notification is defined.
-     */
-    public function hasPreview(): bool
-    {
-        return is_callable($this->preview);
-    }
-
-    /**
-     * Set notification human-readable description.
-     */
-    public function description(string $description): self
+    public function description(string $description): static
     {
         $this->description = $description;
 
@@ -89,87 +66,86 @@ class Subscription implements Arrayable
     }
 
     /**
-     * Set notification for previewing.
+     * Set notification preview.
      *
-     * Closure will get $channel (string) and $notifiable (authenticatable) parameters.
+     * Callback will get 'channel' and 'notifiable' parameters and should return any renderable content.
+     *
+     * @param  callable(string, object): mixed  $preview
      */
-    public function preview(Closure $notification): self
+    public function preview(callable $preview): static
     {
-        $this->preview = $notification;
+        $this->preview = $preview;
 
         return $this;
+    }
+
+    /**
+     * Check if notification has a preview.
+     */
+    public function hasPreview(): bool
+    {
+        return is_callable($this->preview);
+    }
+
+    /**
+     * Get subscription groups.
+     */
+    public function getGroups(): Groups
+    {
+        return new Groups($this->groups ?: [Group::fallback()]);
+    }
+
+    /**
+     * Get notification class name.
+     *
+     * @return class-string<Notification>
+     */
+    public function getNotification(): string
+    {
+        return $this->notification;
+    }
+
+    /**
+     * Get subscription description.
+     */
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    /**
+     * Get notification preview.
+     */
+    public function getPreview(string $channel, User $notifiable): mixed
+    {
+        return is_callable($this->preview) ? call_user_func($this->preview, $channel, $notifiable) : null;
+    }
+
+    /**
+     * Get channels and its states respecting user preferences.
+     *
+     * @param  array<string, bool>  $prefs  User prefernces.
+     *
+     * @return array<string, bool> Actual prefernces.
+     */
+    public function getPreferences(array $prefs): array
+    {
+        return $this->getChannels()
+            ->mapWithKeys(fn(Channel $channel) => [
+                $channel->getName() => $channel->getPreferences($prefs[$channel->getName()] ?? null)
+            ])
+            ->toArray();
     }
 
     public function toArray(): array
     {
         return [
-            'group' => $this->getGroup() ? $this->getGroup()->toArray() : null,
-            'groups' => $this->getGroups()
-                ? array_map(fn (Group $group) => $group->toArray(), $this->getGroups())
-                : null,
-            'notification' => $this->getClassName(),
-            'title' => $this->getTitle(),
-            'description' => $this->getDescription(),
-            'channels' => $this->getChannels()->toArray(),
-            'preview' => $this->hasPreview(),
+            'groups'       => $this->getGroups(),
+            'notification' => $this->getNotification(),
+            'title'        => $this->getTitle(),
+            'description'  => $this->getDescription(),
+            'channels'     => $this->getChannels()->toArray(),
+            'preview'      => $this->hasPreview(),
         ];
-    }
-
-
-    /**
-     * Get notification channels using user preferences.
-     */
-    public function getUserChannels(array $userChannels = []): array
-    {
-        return $this->getChannels()
-            ->mapWithKeys(fn(Channel $channelDefinition) => [
-                $channelDefinition->getName() => $channelDefinition->getForced()
-                    ? $channelDefinition->getDefault()
-                    : (array_key_exists($channelDefinition->getName(), $userChannels)
-                        ? $userChannels[$channelDefinition->getName()]
-                        : $channelDefinition->getDefault()
-                    )
-            ])
-            ->toArray();
-    }
-
-    /**
-     * Get notification channels names.
-     */
-    public function getChannelNames(): array
-    {
-        return $this->getChannels()
-            ->map(fn(Channel $channelDefinition) => $channelDefinition->getName())
-            ->toArray();
-    }
-
-    /**
-     * Get group definition.
-     */
-    public function getGroup(): ?Group
-    {
-        return $this->groups[0] ?? null;
-    }
-
-    /**
-     * Get group definition.
-     *
-     * @return array<int, Group>
-     */
-    public function getGroups(): array
-    {
-        return $this->groups;
-    }
-
-    /**
-     * Group subscription.
-     *
-     * @param string|Group $group
-     */
-    public function group($group): self
-    {
-        $this->groups[] = $group instanceof Group ? $group : new Group($group);
-
-        return $this;
     }
 }

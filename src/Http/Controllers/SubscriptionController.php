@@ -2,11 +2,10 @@
 
 namespace Codewiser\Postie\Http\Controllers;
 
-use Codewiser\Postie\Contracts\Postie;
+use Codewiser\Postie\Collections\Subscriptions;
 use Codewiser\Postie\Http\Requests\SubscriptionToggleRequest;
-use Codewiser\Postie\Http\Resources\SubscriptionResource;
-use Codewiser\Postie\Models\Subscription;
-use Illuminate\Http\JsonResponse;
+use Codewiser\Postie\Http\Resources\PreferenceResource;
+use Codewiser\Postie\PostieService;
 use Illuminate\Http\Request;
 
 class SubscriptionController extends Controller
@@ -14,20 +13,14 @@ class SubscriptionController extends Controller
     /**
      * User notifications list.
      */
-    public function index(Request $request, Postie $postie)
+    public function index(Request $request, PostieService $postie)
     {
-        $group = $request->input('group');
-
-        $subscriptions = collect($postie->getUserNotifications($request->user()))
-            ->filter(function ($item) use ($group) {
-                if (!$group) {
-                    return true;
-                }
-
-                return array_filter($item['groups'],
-                    fn(array $g) => $g['shortcode'] == $group
-                );
-            });
+        $subscriptions = $postie->getSubscriptions($request->user())
+            ->when($request->input('group'),
+                // Filter by requested group
+                fn(Subscriptions $subscriptions, string $shortcode) => $subscriptions->filterByGroup($shortcode)
+            )
+            ->withNotifiable($request->user());
 
         return response()->json([
             'subscriptions' => $subscriptions,
@@ -37,14 +30,14 @@ class SubscriptionController extends Controller
     /**
      * Change user preferences.
      */
-    public function toggle(SubscriptionToggleRequest $request, Postie $postie)
+    public function toggle(SubscriptionToggleRequest $request, PostieService $postie)
     {
-        $subscription = $postie->toggleUserNotificationChannels(
+        $preference = $postie->toggleUserPreferences(
             $request->user(),
             $request->notification,
             $request->channels
         );
 
-        return SubscriptionResource::make($subscription);
+        return PreferenceResource::make($preference);
     }
 }

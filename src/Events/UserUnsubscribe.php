@@ -3,9 +3,9 @@
 namespace Codewiser\Postie\Events;
 
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Notifications\Notifiable;
+use Illuminate\Notifications\Notification;
 use Illuminate\Queue\SerializesModels;
 
 /**
@@ -16,30 +16,12 @@ class UserUnsubscribe
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
-     * Notifiable.
-     *
-     * @var Authenticatable|Notifiable
+     * @param  Model  $notifiable
+     * @param  class-string<Notification>  $notification
+     * @param  string  $channel
      */
-    public $notifiable;
-
-    /**
-     * Notification class name.
-     *
-     * @var string
-     */
-    public string $notification;
-
-    /**
-     * Channel name.
-     *
-     * @var string
-     */
-    public string $channel;
-
-    public function __construct($notifiable, string $notification, string $channel)
+    public function __construct(public Model $notifiable, public string $notification, public string $channel)
     {
-        $this->notifiable = $notifiable;
-        $this->notification = $notification;
-        $this->channel = $channel;
+        //
     }
 }

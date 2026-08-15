@@ -2,42 +2,43 @@
 
 namespace Codewiser\Postie\Http\Requests;
 
-use Codewiser\Postie\Contracts\Postie;
+use Codewiser\Postie\PostieService;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Notifications\Notification;
 use Illuminate\Validation\Rule;
 
 /**
- * Subscription Store Request.
+ * Subscription Toggle Request.
  *
- * @property-read string $notification Notification class name.
- * @property-read array $channels User preferences.
+ * @property-read class-string<Notification> $notification Notification class name.
+ * @property-read array<string, bool> $channels User preferences.
  */
 class SubscriptionToggleRequest extends FormRequest
 {
-    public function rules(Postie $postie)
+    public function rules(PostieService $postie): array
     {
         return [
-                'notification' => [
-                    'required',
-                    'string',
-                    Rule::in($postie->getNotifications()->classNames()),
-                ],
-            ] + $this->getChannelRules($postie);
+            'notification' => [
+                'required',
+                'string',
+                Rule::in($postie->getSubscriptions()->names()),
+            ],
+
+            'channels' => 'required|array',
+            ...$this->getChannelRules($postie)
+        ];
     }
 
-    public function getChannelRules(Postie $postie): array
+    public function getChannelRules(PostieService $postie): array
     {
-        $channelRules = [
-            'channels' => ['required', 'array'],
-        ];
+        $rules = [];
 
-        $definition = $postie->getNotifications()->find($this->notification);
+        $subscription = $postie->getSubscriptions()->find($this->notification);
 
-        foreach ($definition->getChannelNames() as $channelName) {
-            $key = 'channels.' . $channelName;
-            $channelRules[$key] = ['boolean'];
+        foreach ($subscription->getChannels()->names() as $name) {
+            $rules["channels.$name"] = ['boolean'];
         }
 
-        return $channelRules;
+        return $rules;
     }
 }

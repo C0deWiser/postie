@@ -4,7 +4,6 @@ namespace Codewiser\Postie;
 
 use Codewiser\Postie\Console\InstallCommand;
 use Codewiser\Postie\Console\PublishCommand;
-use Codewiser\Postie\Contracts\Postie;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -12,10 +11,8 @@ class PostieServiceProvider extends ServiceProvider
 {
     /**
      * Bootstrap any application services.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         $this->registerRoutes();
         $this->registerMigrations();
@@ -27,119 +24,101 @@ class PostieServiceProvider extends ServiceProvider
 
     /**
      * Register any application services.
-     *
-     * @return void
      */
-    public function register()
+    public function register(): void
     {
-        if (!defined('POSTIE_PATH')) {
-            define('POSTIE_PATH', realpath(__DIR__ . '/../'));
+        if (! defined('POSTIE_PATH')) {
+            define('POSTIE_PATH', realpath(__DIR__.'/../'));
         }
 
-        $this->mergeConfigFrom(__DIR__ . '/../config/postie.php', 'postie');
-
-        $this->app->singleton(Postie::class, fn() => new PostieService());
-
-        $this->app->singleton(PostieService::class, fn() => new PostieService());
+        $this->mergeConfigFrom(__DIR__.'/../config/postie.php', 'postie');
     }
 
     /**
      * Register the Postie routes.
-     *
-     * @return void
      */
-    protected function registerRoutes()
+    protected function registerRoutes(): void
     {
         $middlewares = config('postie.middleware', 'web');
-        if (!is_array($middlewares)) {
+        if (! is_array($middlewares)) {
             $middlewares = [$middlewares];
         }
 
         $auth = false;
         foreach ($middlewares as $middleware) {
-            if ($middleware === 'auth' || strpos($middleware, 'auth.') === 0) {
+            if ($middleware === 'auth' || str_starts_with($middleware, 'auth.')) {
                 $auth = true;
             }
         }
-        if (!$auth) {
+        if (! $auth) {
             $middlewares[] = 'auth';
         }
 
         Route::group([
-            'domain' => config('postie.domain', null),
-            'prefix' => config('postie.path'),
+            'domain'     => config('postie.domain', null),
+            'prefix'     => config('postie.path'),
             'middleware' => $middlewares,
-            'as' => 'postie.',
+            'as'         => 'postie.',
         ], function () {
-            $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
+            $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
         });
     }
 
     /**
      * Register the Postie migrations.
-     *
-     * @return void
      */
-    protected function registerMigrations()
+    protected function registerMigrations(): void
     {
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
 
     /**
      * Register the Postie resources.
-     *
-     * @return void
      */
-    protected function registerResources()
+    protected function registerResources(): void
     {
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'postie');
-        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'postie');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'postie');
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'postie');
     }
 
     /**
      * Define the asset publishing configuration.
-     *
-     * @return void
      */
-    protected function defineAssetPublishing()
+    protected function defineAssetPublishing(): void
     {
         $this->publishes([
-            POSTIE_PATH . '/public' => public_path('vendor/postie'),
+            POSTIE_PATH.'/public' => public_path('vendor/postie'),
         ], ['postie-assets', 'laravel-assets']);
     }
 
     /**
-     * Setup the resource publishing groups
-     *
-     * @return void
+     * Set up the resource publishing groups
      */
-    protected function offerPublishing()
+    protected function offerPublishing(): void
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../stubs/PostieServiceProvider.php' => app_path('Providers/PostieServiceProvider.php'),
+                __DIR__.'/../stubs/PostieServiceProvider.php' => app_path('Providers/PostieServiceProvider.php'),
             ], 'postie-provider');
 
             $this->publishes([
-                __DIR__ . '/../config/postie.php' => config_path('postie.php'),
+                __DIR__.'/../config/postie.php' => config_path('postie.php'),
             ], 'postie-config');
 
             $this->publishes([
-                __DIR__ . '/../database/migrations' => database_path('migrations'),
+                __DIR__.'/../database/migrations' => database_path('migrations'),
             ], 'postie-migrations');
 
             $this->publishes([
-                __DIR__ . '/../resources/lang' => resource_path('lang/vendor/postie'),
+                __DIR__.'/../resources/lang' => resource_path('lang/vendor/postie'),
             ], 'postie-translations');
         }
     }
 
     /**
      * Register the package's commands.
-     *
-     * @return void
      */
-    protected function registerCommands()
+    protected function registerCommands(): void
     {
         if ($this->app->runningInConsole()) {
 

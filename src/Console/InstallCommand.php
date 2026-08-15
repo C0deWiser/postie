@@ -26,7 +26,7 @@ class InstallCommand extends Command
      *
      * @return void
      */
-    public function handle()
+    public function handle(): void
     {
         $this->comment('Publishing Postie Service Provider...');
         $this->callSilent('vendor:publish', ['--tag' => 'postie-provider']);
@@ -50,7 +50,7 @@ class InstallCommand extends Command
      *
      * @return void
      */
-    protected function registerPostieServiceProvider()
+    protected function registerPostieServiceProvider(): void
     {
         $namespace = Str::replaceLast('\\', '', $this->laravel->getNamespace());
 

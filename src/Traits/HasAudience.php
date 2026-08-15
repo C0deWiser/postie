@@ -7,13 +7,16 @@ use Illuminate\Contracts\Database\Eloquent\Builder;
 
 trait HasAudience
 {
-    protected ?Closure $audience = null;
+    /**
+     * @var null|callable
+     */
+    protected $audience = null;
 
     /**
      * Define notification possible audience.
      * Closure should return Builder with notifiable objects.
      */
-    public function for(Closure $audience): self
+    public function for(callable $audience): static
     {
         $this->audience = $audience;
 
@@ -23,7 +26,7 @@ trait HasAudience
     /**
      * @deprecated use for()
      */
-    public function audience(Closure $audienceBuilder): self
+    public function audience(callable $audienceBuilder): static
     {
         return $this->for($audienceBuilder);
     }

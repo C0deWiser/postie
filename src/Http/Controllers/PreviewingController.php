@@ -2,42 +2,42 @@
 
 namespace Codewiser\Postie\Http\Controllers;
 
-use Codewiser\Postie\Contracts\Postie;
+use Codewiser\Postie\PostieService;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Support\ItemNotFoundException;
 use Illuminate\Support\MultipleItemsFoundException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class PreviewingController extends Controller
 {
-    public function __invoke(Request $request, Postie $postie)
+    public function __invoke(Request $request, PostieService $postie)
     {
-        $channelName = $request->route('channel');
+        $channel = $request->route('channel');
         $notification = $request->route('notification');
 
         try {
-            $definition = $postie->getNotifications()->find($notification);
-        } catch (ItemNotFoundException|MultipleItemsFoundException $exception) {
-            abort(404, "Notification {$notification} Not Found");
+            $subscription = $postie->getSubscriptions()->find($notification);
+        } catch (ItemNotFoundException|MultipleItemsFoundException) {
+            throw new NotFoundHttpException("Notification $notification Not Found");
         }
 
         try {
-            $definition->getChannels()->find($channelName);
-        } catch (ItemNotFoundException|MultipleItemsFoundException $exception) {
-            abort(404, "Channel {$channelName} Not Found");
+            $subscription->getChannels()->find($channel);
+        } catch (ItemNotFoundException|MultipleItemsFoundException) {
+            throw new NotFoundHttpException("Channel $channel Not Found");
         }
 
-        $previewing = $definition
-            ->getPreview($channelName, $request->user());
+        $preview = $subscription->getPreview($channel, $request->user());
 
-        if (!$previewing) {
-            abort(404, "{$notification} has no preview configured");
+        if (! $preview) {
+            throw new NotFoundHttpException("$notification has no preview configured");
         }
 
-        if ($previewing instanceof Renderable) {
-            return $previewing->render($request);
+        if ($preview instanceof Renderable) {
+            return $preview->render($request);
         }
 
-        return $previewing;
+        return $preview;
     }
 }

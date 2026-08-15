@@ -2,37 +2,37 @@
 
 namespace Codewiser\Postie;
 
-use Closure;
-use Codewiser\Postie\Collections\NotificationCollection;
-use Codewiser\Postie\Contracts\Postie;
+use Codewiser\Postie\Collections\Groups;
+use Codewiser\Postie\Collections\Subscriptions;
 use Codewiser\Postie\Events\UserSubscribe;
 use Codewiser\Postie\Events\UserUnsubscribe;
-use Codewiser\Postie\Models\Subscription;
+use Codewiser\Postie\Models\Preference;
 use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\AnonymousNotifiable;
-use Illuminate\Notifications\Notifiable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Illuminate\Support\ItemNotFoundException;
-use Illuminate\Support\LazyCollection;
 use Illuminate\Support\MultipleItemsFoundException;
 
-class PostieService implements Postie
+class PostieService
 {
-    public static \Closure $notifications;
+    /**
+     * @var callable
+     */
+    public static $definitions;
 
     public function assetsAreCurrent(): bool
     {
         $publishedPath = public_path('vendor/postie/mix-manifest.json');
 
-        if (!File::exists($publishedPath)) {
+        if (! File::exists($publishedPath)) {
             throw new \RuntimeException('Postie assets are not published. Please run: php artisan postie:publish');
         }
 
-        return File::get($publishedPath) === File::get(__DIR__ . '/../public/mix-manifest.json');
+        return File::get($publishedPath) === File::get(__DIR__.'/../public/mix-manifest.json');
     }
 
     public function scriptVariables(): array
@@ -42,109 +42,118 @@ class PostieService implements Postie
         ];
     }
 
-    public function getNotifications(): NotificationCollection
+    /**
+     * Get defined subscriptions (all list or for exact notifiable).
+     */
+    public function getSubscriptions(Model $notifiable = null): Subscriptions
     {
-        return NotificationCollection::make(call_user_func(self::$notifications));
+        $subscriptions = new Subscriptions(call_user_func(self::$definitions));
+
+        return $notifiable
+            ? $subscriptions->for($notifiable)
+            : $subscriptions;
+    }
+
+    /**
+     * Get all defined groups for a given notifiable.
+     */
+    public function getGroups(Model $notifiable): Groups
+    {
+        return $this->getSubscriptions($notifiable)->groups();
     }
 
     /**
      * Get notification channels for the given notifiable.
      *
-     * @param string $notification
-     * @param Model|Notifiable|AnonymousNotifiable $notifiable
-     * @return array
+     * @param  class-string<Notification>  $notification
+     * @param  object  $notifiable
+     *
+     * @return array<int, string>
      */
-    public function via(string $notification, $notifiable): array
+    public function via(string $notification, object $notifiable): array
     {
-        $notificationDefinition = $this->getNotifications()->find($notification);
+        $subscription = $this->getSubscriptions()->find($notification);
 
         if ($notifiable instanceof AnonymousNotifiable) {
             return array_intersect(
                 array_keys($notifiable->routes),
-                $notificationDefinition->getChannels()->names()
+                $subscription->getChannels()->names()
             );
         }
 
-        /** @var Subscription $subscription */
-        $subscription = Subscription::for($notifiable, $notification)->first();
-        $userChannels = $subscription ? $subscription->channels : [];
-        $actualChannels = $notificationDefinition->getUserChannels($userChannels);
+        /** @var Preference $preference */
+        $preference = ($notifiable instanceof Model)
+            ? Preference::for($notifiable, $notification)->first()
+            : null;
 
-        // Actualize user preferences...
-        if ($subscription) {
-            if (
-                count(array_diff_assoc($subscription->channels, $actualChannels)) ||
-                count($subscription->channels) !== count($actualChannels)
-            ) {
-                $subscription->channels = $actualChannels;
-                $subscription->save();
-            }
-        }
+        // Merge with defined channels with user preferences
+        $channels = $subscription->getPreferences(
+            $preference?->channels ?? []
+        );
 
-        $actualChannels = array_filter($actualChannels, function ($status) {
-            return $status;
-        }, ARRAY_FILTER_USE_BOTH);
-        $activeChannels = array_keys($actualChannels);
+        // Get names of enabled channels
+        $channels = array_keys(array_filter($channels));
 
         // Check if route available for the notifiable.
-        return array_filter($activeChannels, function ($channel) use ($notifiable) {
-
-            if ($channel == 'broadcast') {
-                // Broadcast doesnt require routing
-                return true;
-            }
-
-            return (bool)$notifiable->routeNotificationFor($channel);
-        });
+        // Broadcast doesn't require routing...
+        return array_filter($channels,
+            fn($channel) => ($channel == 'broadcast') || $notifiable->routeNotificationFor($channel)
+        );
     }
 
-    public function getUserNotifications($notifiable): array
+    /**
+     * Toggles user preferences.
+     *
+     * @param  class-string<Notification>  $notification
+     * @param  array<string, bool>  $prefs
+     */
+    public function toggleUserPreferences(Model $notifiable, string $notification, array $prefs): Preference
     {
-        $userNotificationDefinitions = $this->getNotifications()->for($notifiable);
+        $subscription = $this->getSubscriptions()->find($notification);
 
-        return $userNotificationDefinitions->buildUserNotificationsWithChannelStatuses($notifiable);
-    }
+        // Filter user preferences
+        // Left only channels with state differs from predefined
+        $prefs = array_filter(
+            $subscription->getPreferences($prefs),
+            fn(bool $status, string $channel) => $subscription->getChannels()->find($channel)->getDefault() !== $status,
+            ARRAY_FILTER_USE_BOTH
+        );
 
-    public function toggleUserNotificationChannels($notifiable, string $notification, array $channels): Subscription
-    {
-        /** @var Subscription $subscription */
-        $subscription = Subscription::for($notifiable, $notification)->first();
+        /** @var Preference $preference */
+        $preference = Preference::for($notifiable, $notification)->first();
 
-        if ($subscription) {
-            // Update preferences
-            $subscription->channels = $this
-                ->getNotifications()
-                ->find($notification)
-                ->getUserChannels(array_merge($subscription->channels, $channels));
-        } else {
+        if (! $preference) {
             // Create preferences
-            $subscription = new Subscription;
-            $subscription->notifiable()->associate($notifiable);
-            $subscription->notification = $notification;
-            $subscription->channels = $this
-                ->getNotifications()
-                ->find($notification)
-                ->getUserChannels($channels);
-        }
-        $subscription->save();
-
-        foreach ($channels as $channel => $subscribed) {
-            if ($subscribed) {
-                event(new UserSubscribe($notifiable, $notification, $channel));
-            } else {
-                event(new UserUnsubscribe($notifiable, $notification, $channel));
-            }
+            $preference = new Preference;
+            $preference->notifiable()->associate($notifiable);
+            $preference->notification = $notification;
         }
 
-        return $subscription;
+        if ($prefs) {
+            $preference->channels = $prefs;
+            $preference->save();
+        } elseif ($preference->exists) {
+            $preference->delete();
+        }
+
+        foreach ($prefs as $channel => $subscribed) {
+            $subscribed
+                ? event(new UserSubscribe($notifiable, $notification, $channel))
+                : event(new UserUnsubscribe($notifiable, $notification, $channel));
+        }
+
+        return $preference;
     }
 
+    /**
+     * @deprecated
+     */
     public function send(Notification $notification, $callback = null)
     {
         $audience = null;
 
         try {
-            $definition = $this->getNotifications()->find(get_class($notification));
+            $definition = $this->getSubscriptions()->find(get_class($notification));
 
             if ($builder = $definition->getAudience()) {
                 $audience = is_callable($callback)

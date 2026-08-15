@@ -7,10 +7,10 @@ return [
     'preview' => 'Preview',
     'subscribe' => 'Subscribe',
     'unsubscribe' => 'Unsubscribe',
-    'subscribed' => 'You subscribed',
-    'unsubscribed' => 'You not subscribed',
+    'subscribed' => 'You are subscribed',
+    'unsubscribed' => 'You are not subscribed',
     'forceSubscribed' => 'You can not unsubscribe',
     'forceUnsubscribed' => 'You can not subscribe',
-    'unavailableChannel' => 'Channel unavailable for you',
+    'unavailableChannel' => 'Channel is unavailable for you',
     'fallbackGroup' => 'Other',
 ];

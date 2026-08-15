@@ -2,67 +2,132 @@
 
 namespace Codewiser\Postie;
 
+use Codewiser\Postie\Traits\HasTitle;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Str;
 
 class Channel implements Arrayable
 {
-    protected string $name;
-    protected string $title;
-    protected bool $default = true;
-    protected bool $forced = false;
-    protected bool $hidden = false;
+    use HasTitle;
+
     protected string $icon;
     protected ?string $subtitle = null;
 
     /**
-     * Make definition with channel name.
+     * Make channel definition with channel name.
+     *
+     * @param  string  $name  Channel name (mail, sms, etc).
+     * @param  bool  $default  Default state (subscribed or not).
+     * @param  bool  $forced  Can user change subscription?
+     * @param  bool  $hidden  Hide channel from dashboard?
      */
-    public static function via(string $name, bool $active = true, bool $forced = false, bool $hidden = false): Channel
+    public static function via(string $name, bool $default = true, bool $forced = false, bool $hidden = false): static
     {
-        return new static($name, $active, $forced, $hidden);
+        return new static($name, $default, $forced, $hidden);
     }
 
     /**
-     * @param string $name Channel name.
+     * @param  string  $name  Channel name (mail, sms, etc).
+     * @param  bool  $default  Default state (subscribed or not).
+     * @param  bool  $forced  Can user change subscription?
+     * @param  bool  $hidden  Hide channel from dashboard?
      */
-    public function __construct(string $name, bool $active = true, bool $forced = false, bool $hidden = false)
-    {
-        $this->name = $name;
-        $this->title = (string)Str::of(class_basename($name))->snake()->studly();
-        $this->default = $active;
-        $this->forced = $forced;
-        $this->hidden = $hidden;
+    public function __construct(
+        protected string $name,
+        protected bool $default = true,
+        protected bool $forced = false,
+        protected bool $hidden = false
+    ) {
+        $this->title = (string) Str::of(class_basename($this->name))->snake()->studly();
 
-        switch ($name) {
-            case 'skype':
-            case 'slack':
-            case 'steam':
-            case 'rocket':
-            case 'spotify':
-            case 'facebook':
-            case 'linkedin':
-            case 'mastodon':
-            case 'telegram':
-            case 'whatsapp':
-                $this->icon = 'bi bi-'.$name;
-                break;
-            case 'mail':
-                $this->icon = 'bi bi-envelope';
-                break;
-            case 'sms':
-                $this->icon = 'bi bi-chat';
-                break;
-            case 'database':
-                $this->icon = 'bi bi-bell';
-                break;
-            case 'broadcast':
-                $this->icon = 'bi bi-app-indicator';
-                break;
-            default:
-                $this->icon = 'bi bi-record-circle';
-                break;
-        }
+        $this->icon = match ($this->name) {
+            'skype', 'slack', 'steam', 'rocket',
+            'spotify', 'facebook', 'linkedin',
+            'mastodon', 'telegram', 'whatsapp' => 'bi bi-'.$this->name,
+            'mail'                             => 'bi bi-envelope',
+            'sms'                              => 'bi bi-chat',
+            'database'                         => 'bi bi-bell',
+            'broadcast'                        => 'bi bi-app-indicator',
+            default                            => 'bi bi-record-circle',
+        };
+    }
+
+    /**
+     * Set channel human-readable title.
+     */
+    public function title(string $title): static
+    {
+        $clone = clone $this;
+        $clone->title = $title;
+        return $clone;
+    }
+
+    /**
+     * Set channel description.
+     */
+    public function subtitle(string $subtitle): static
+    {
+        $clone = clone $this;
+        $clone->subtitle = $subtitle;
+        return $clone;
+    }
+
+    /**
+     * Set channel default.
+     */
+    public function default(bool $default): static
+    {
+        $clone = clone $this;
+        $clone->default = $default;
+        return $clone;
+    }
+
+    /**
+     * Set channel active by default.
+     */
+    public function active(): static
+    {
+        return $this->default(true);
+    }
+
+    /**
+     * Set channel passive by default.
+     */
+    public function passive(): static
+    {
+        return $this->default(false);
+    }
+
+    /**
+     * Set if channel is forced to use default state.
+     */
+    public function forced(bool $forced = true): static
+    {
+        $clone = clone $this;
+        $clone->forced = $forced;
+        return $clone;
+    }
+
+    /**
+     * Set if channel should be hidden from dashboard.
+     */
+    public function hidden(bool $hidden = true): static
+    {
+        $clone = clone $this;
+        $clone->hidden = $hidden;
+        return $clone;
+    }
+
+    /**
+     * Set channel icon bootstrap class name (without prefix "bi bi-*").
+     *
+     * @see https://icons.getbootstrap.com/
+     */
+    public function icon(string $icon): static
+    {
+        $clone = clone $this;
+        $clone->icon = 'bi bi-'.$icon;
+        return $clone;
     }
 
     /**
@@ -74,14 +139,6 @@ class Channel implements Arrayable
     }
 
     /**
-     * Get channel human readable title.
-     */
-    public function getTitle(): string
-    {
-        return $this->title;
-    }
-
-    /**
      * Get channel description.
      */
     public function getSubtitle(): ?string
@@ -90,7 +147,7 @@ class Channel implements Arrayable
     }
 
     /**
-     * Check if channel enabled by default.
+     * If channel enabled by default.
      */
     public function getDefault(): bool
     {
@@ -98,7 +155,7 @@ class Channel implements Arrayable
     }
 
     /**
-     * Check if channel forced to use default value.
+     * Is channel forced to use default state.
      */
     public function getForced(): bool
     {
@@ -106,7 +163,7 @@ class Channel implements Arrayable
     }
 
     /**
-     * Check if channel should be hidden from user interface.
+     * Should channel be hidden from dashboard?
      */
     public function getHidden(): bool
     {
@@ -114,7 +171,7 @@ class Channel implements Arrayable
     }
 
     /**
-     * Get channel bootstrap icon class name.
+     * Get channel icon bootstrap class name.
      */
     public function getIcon(): string
     {
@@ -122,105 +179,29 @@ class Channel implements Arrayable
     }
 
     /**
-     * Set channel human readable title.
-     */
-    public function title(string $title): self
-    {
-        $clone = clone $this;
-        $clone->title = $title;
-        return $clone;
-    }
-
-    /**
-     * Set channel description.
-     */
-    public function subtitle(string $subtitle): self
-    {
-        $clone = clone $this;
-        $clone->subtitle = $subtitle;
-        return $clone;
-    }
-
-    /**
-     * Set channel default.
-     */
-    public function default(bool $default): self
-    {
-        $clone = clone $this;
-        $clone->default = $default;
-        return $clone;
-    }
-
-    /**
-     * Set channel active by default.
-     */
-    public function active(): self
-    {
-        return $this->default(true);
-    }
-
-    /**
-     * Set channel passive by default.
-     */
-    public function passive(): self
-    {
-        return $this->default(false);
-    }
-
-    /**
-     * Set if channel is forced to use default state.
-     */
-    public function forced(bool $forced = true): self
-    {
-        $clone = clone $this;
-        $clone->forced = $forced;
-        return $clone;
-    }
-
-    /**
-     * Set if channel should be hidden from user interface.
-     */
-    public function hidden(bool $hidden = true): self
-    {
-        $clone = clone $this;
-        $clone->hidden = $hidden;
-        return $clone;
-    }
-
-    /**
-     * Set channel bootstrap icon class name (without prefix "bi bi-*").
+     * Get channel activity respecting user preferences.
      *
-     * @see https://icons.getbootstrap.com/
+     * @param  null|bool  $prefs  User preferences about this channel.
      */
-    public function icon(string $icon): self
+    public function getPreferences(bool $prefs = null): bool
     {
-        $clone = clone $this;
-        $clone->icon = 'bi bi-'.$icon;
-        return $clone;
-    }
-
-    /**
-     * Check if channel enabled using user preferences.
-     */
-    public function getStatus($notifiable, bool $userChannelStatus = null): bool
-    {
-        if ($this->forced || is_null($userChannelStatus)) {
+        if ($this->forced || is_null($prefs)) {
             return $this->default;
         }
 
-        return $userChannelStatus;
+        return $prefs;
     }
 
     public function toArray(): array
     {
         return [
-            'name' => $this->getName(),
-            'title' => $this->getTitle(),
+            'name'     => $this->getName(),
+            'title'    => $this->getTitle(),
             'subtitle' => $this->getSubtitle(),
-            'default' => $this->getDefault(),
-            'forced' => $this->getForced(),
-            'hidden' => $this->getHidden(),
-            'icon' => $this->getIcon(),
+            'default'  => $this->getDefault(),
+            'forced'   => $this->getForced(),
+            'hidden'   => $this->getHidden(),
+            'icon'     => $this->getIcon(),
         ];
     }
 }

@@ -3,7 +3,7 @@
 namespace Codewiser\Postie\Traits;
 
 use Codewiser\Postie\Channel;
-use Codewiser\Postie\Collections\ChannelCollection;
+use Codewiser\Postie\Collections\Channels;
 
 trait HasChannels
 {
@@ -12,21 +12,20 @@ trait HasChannels
     /**
      * Set notification available channels.
      *
-     * @param Channel|string|array $channels
+     * @param  array<int, Channel>|string|Channel  $channels
      */
-    public function via($channels): self
+    public function via(array|string|Channel $channels): static
     {
-        if (!is_array($channels)) {
+        if (! is_array($channels)) {
             $channels = func_get_args();
         }
 
-        foreach ($channels as $i => $channel) {
-            if (is_string($channel)) {
-                $channels[$i] = new Channel($channel);
-            }
-        }
-
-        $this->channels = $channels;
+        $this->channels = array_map(
+            fn($channel) => is_string($channel)
+                ? new Channel($channel)
+                : $channel,
+            $channels
+        );
 
         return $this;
     }
@@ -34,8 +33,8 @@ trait HasChannels
     /**
      * Get notification available channels.
      */
-    public function getChannels(): ChannelCollection
+    public function getChannels(): Channels
     {
-        return ChannelCollection::make($this->channels ?? []);
+        return new Channels($this->channels);
     }
 }

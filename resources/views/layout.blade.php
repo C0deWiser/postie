@@ -18,6 +18,9 @@
         window.translations = @json($trans)
     </script>
 </head>
+@php
+/** @var \Codewiser\Postie\Group $group */
+@endphp
 <body>
 <div id="postie" v-cloak>
     <alert :message="alert.message"
@@ -43,9 +46,9 @@
                 <ul class="nav flex-column">
                     @foreach($groups as $group)
                     <li class="nav-item">
-                        <router-link exact-active-class="active" to="/subscriptions?group={{ $group['shortcode'] }}" class="nav-link d-flex align-items-center">
-                            <i class="bi bi-{{ $group['icon'] }} mr-2"></i>
-                            <span>{{ $group['name'] }}</span>
+                        <router-link exact-active-class="active" to="/subscriptions?group={{ $group->getShortcode() }}" class="nav-link d-flex align-items-center">
+                            <i class="bi bi-{{ $group->getIcon() }} mr-2"></i>
+                            <span>{{ $group->getTitle() }}</span>
                         </router-link>
                     </li>
                     @endforeach

@@ -5,8 +5,6 @@ namespace Codewiser\Postie\Http\Controllers;
 use Codewiser\Postie\PostieService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Lang;
 
 class HomeController extends Controller
@@ -16,29 +14,16 @@ class HomeController extends Controller
      */
     public function index(Request $request, PostieService $postie)
     {
-        $subscriptions = $postie->getUserNotifications($request->user());
-
-        if (!$subscriptions) {
-            abort(404);
-        }
-
-        $groups = [];
-        foreach ($subscriptions as $subscription) {
-            $gs = $subscription['groups'];
-            $gs = is_array($gs) ? $gs : [$gs];
-            foreach ($gs as $g) {
-                $groups[$g['shortcode']] = $g;
-            }
-        }
+        $groups = $postie->getGroups($request->user());
 
         return view('postie::layout', [
-            'assetsAreCurrent' => $postie->assetsAreCurrent(),
-            'cssFile' => 'app.css',
-            'cssBootstrapIcons' => 'bootstrap-icons.css',
+            'assetsAreCurrent'      => $postie->assetsAreCurrent(),
+            'cssFile'               => 'app.css',
+            'cssBootstrapIcons'     => 'bootstrap-icons.css',
             'postieScriptVariables' => $postie->scriptVariables(),
-            'isDownForMaintenance' => App::isDownForMaintenance(),
-            'groups' => $groups,
-            'trans' => Arr::dot([
+            'isDownForMaintenance'  => app()->isDownForMaintenance(),
+            'groups'                => $groups->reorder(),
+            'trans'                 => Arr::dot([
                 'subscriptions' => Lang::get('postie::subscriptions')
             ])
         ]);
