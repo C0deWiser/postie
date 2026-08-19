@@ -12,7 +12,7 @@ trait HasChannels
     /**
      * Set notification available channels.
      *
-     * @param  array<int, Channel>|string|Channel  $channels
+     * @param  array<int, string|Channel>|string|Channel  $channels
      */
     public function via(array|string|Channel $channels): static
     {

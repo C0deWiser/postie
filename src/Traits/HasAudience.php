@@ -2,8 +2,8 @@
 
 namespace Codewiser\Postie\Traits;
 
-use Closure;
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Notifications\Notifiable;
 
 trait HasAudience
 {
@@ -14,7 +14,8 @@ trait HasAudience
 
     /**
      * Define notification possible audience.
-     * Closure should return Builder with notifiable objects.
+     *
+     * @param callable(mixed): Builder<Notifiable> $audience
      */
     public function for(callable $audience): static
     {

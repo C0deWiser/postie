@@ -2,20 +2,18 @@
 
 namespace Codewiser\Postie;
 
-use Closure;
 use Codewiser\Postie\Collections\Groups;
 use Codewiser\Postie\Traits\HasAudience;
 use Codewiser\Postie\Traits\HasChannels;
 use Codewiser\Postie\Traits\HasTitle;
-use Illuminate\Contracts\Auth\Authenticatable as User;
-use Illuminate\Contracts\Mail\Mailable;
+use Codewiser\Postie\Traits\HasVarieties;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
 
 class Subscription implements Arrayable
 {
-    use HasChannels, HasAudience, HasTitle;
+    use HasChannels, HasAudience, HasTitle, HasVarieties;
 
     protected ?string $description = null;
     /**
@@ -82,9 +80,9 @@ class Subscription implements Arrayable
     /**
      * Check if notification has a preview.
      */
-    public function hasPreview(): bool
+    public function hasPreview(Channel $channel, object $notifiable): bool
     {
-        return is_callable($this->preview);
+        return (bool) $this->getPreview($channel, $notifiable);
     }
 
     /**
@@ -116,25 +114,13 @@ class Subscription implements Arrayable
     /**
      * Get notification preview.
      */
-    public function getPreview(string $channel, User $notifiable): mixed
+    public function getPreview(string|Channel $channel, object $notifiable): mixed
     {
-        return is_callable($this->preview) ? call_user_func($this->preview, $channel, $notifiable) : null;
-    }
+        if ($channel instanceof Channel) {
+            $channel = $channel->getName();
+        }
 
-    /**
-     * Get channels and its states respecting user preferences.
-     *
-     * @param  array<string, bool>  $prefs  User prefernces.
-     *
-     * @return array<string, bool> Actual prefernces.
-     */
-    public function getPreferences(array $prefs): array
-    {
-        return $this->getChannels()
-            ->mapWithKeys(fn(Channel $channel) => [
-                $channel->getName() => $channel->getPreferences($prefs[$channel->getName()] ?? null)
-            ])
-            ->toArray();
+        return is_callable($this->preview) ? call_user_func($this->preview, $channel, $notifiable) : null;
     }
 
     public function toArray(): array
@@ -145,7 +131,8 @@ class Subscription implements Arrayable
             'title'        => $this->getTitle(),
             'description'  => $this->getDescription(),
             'channels'     => $this->getChannels()->toArray(),
-            'preview'      => $this->hasPreview(),
+            'varieties'    => $this->getVarieties(),
+            //'preview'      => $this->hasPreview(),
         ];
     }
 }

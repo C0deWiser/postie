@@ -5,7 +5,6 @@ namespace Codewiser\Postie\Collections;
 use Codewiser\Postie\Channel;
 use Codewiser\Postie\Models\Preference;
 use Codewiser\Postie\Subscription;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\ItemNotFoundException;
 use Illuminate\Support\MultipleItemsFoundException;
@@ -68,12 +67,28 @@ class Channels extends Collection
                 $notifiable->routeNotificationFor($channel->getName()),
 
             // Notification preview route
-            'previewing' => $subscription->hasPreview()
+            'previewing' => $subscription->hasPreview($channel, $notifiable)
                 ? route('postie.preview', [
                     'channel'      => $channel->getName(),
                     'notification' => $subscription->getNotification()
                 ])
                 : null,
         ])->toArray();
+    }
+
+    /**
+     * Get channels and its states respecting user preferences.
+     *
+     * @param  array<string, bool>  $prefs  User prefernces.
+     *
+     * @return array<string, bool> Actual prefernces.
+     */
+    public function getPreferences(array $prefs): array
+    {
+        return $this
+            ->mapWithKeys(fn(Channel $channel) => [
+                $channel->getName() => $channel->getPreferences($prefs[$channel->getName()] ?? null)
+            ])
+            ->toArray();
     }
 }

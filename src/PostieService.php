@@ -86,10 +86,10 @@ class PostieService
             ? Preference::for($notifiable, $notification)->first()
             : null;
 
-        // Merge with defined channels with user preferences
-        $channels = $subscription->getPreferences(
-            $preference?->channels ?? []
-        );
+        // Merge pre-defined preferences with user preferences
+        $channels = $subscription
+            ->getChannels()
+            ->getPreferences($preference?->channels ?? []);
 
         // Get names of enabled channels
         $channels = array_keys(array_filter($channels));
@@ -106,15 +106,20 @@ class PostieService
      *
      * @param  class-string<Notification>  $notification
      * @param  array<string, bool>  $prefs
+     * @param  null|string  $variety
      */
-    public function toggleUserPreferences(Model $notifiable, string $notification, array $prefs): Preference
-    {
+    public function toggleUserPreferences(
+        Model $notifiable,
+        string $notification,
+        array $prefs,
+        ?string $variety
+    ): Preference {
         $subscription = $this->getSubscriptions()->find($notification);
 
         // Filter user preferences
         // Left only channels with state differs from predefined
         $prefs = array_filter(
-            $subscription->getPreferences($prefs),
+            $subscription->getChannels()->getPreferences($prefs),
             fn(bool $status, string $channel) => $subscription->getChannels()->find($channel)->getDefault() !== $status,
             ARRAY_FILTER_USE_BOTH
         );

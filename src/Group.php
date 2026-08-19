@@ -5,12 +5,13 @@ namespace Codewiser\Postie;
 use Codewiser\Postie\Traits\HasAudience;
 use Codewiser\Postie\Traits\HasChannels;
 use Codewiser\Postie\Traits\HasTitle;
+use Codewiser\Postie\Traits\HasVarieties;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Str;
 
 class Group implements Arrayable
 {
-    use HasChannels, HasAudience, HasTitle;
+    use HasChannels, HasAudience, HasTitle, HasVarieties;
 
     protected array $subscriptions;
     protected bool $fallback = false;
@@ -63,6 +64,10 @@ class Group implements Arrayable
                 $channels[] = $channel;
             }
             $subscription->via($channels);
+        }
+
+        if (! $subscription->getVarieties()) {
+            $subscription->varieties($this->varieties);
         }
 
         if (! $subscription->hasAudience() && $this->hasAudience()) {
