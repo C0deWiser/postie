@@ -12,6 +12,7 @@ class Channel implements Arrayable
 
     protected string $icon;
     protected ?string $subtitle = null;
+    protected ?string $router = null;
 
     /**
      * Make channel definition with channel name.
@@ -131,6 +132,16 @@ class Channel implements Arrayable
     }
 
     /**
+     * Provide a URL where user can enable route for this channel.
+     */
+    public function router(string $url): static
+    {
+        $this->router = $url;
+
+        return $this;
+    }
+
+    /**
      * Get channel name.
      */
     public function getName(): string
@@ -179,6 +190,14 @@ class Channel implements Arrayable
     }
 
     /**
+     * URL where user can enable route for this channel.
+     */
+    public function getRouter(): ?string
+    {
+        return $this->router;
+    }
+
+    /**
      * Get channel activity respecting user preferences.
      *
      * @param  null|bool  $prefs  User preferences about this channel.
@@ -202,6 +221,7 @@ class Channel implements Arrayable
             'forced'   => $this->getForced(),
             'hidden'   => $this->getHidden(),
             'icon'     => $this->getIcon(),
+            'router'   => $this->getRouter(),
         ];
     }
 }

@@ -52,6 +52,6 @@ return [
     |
     */
 
-    'table' => env('POSTIE_TABLE', 'subscriptions'),
+    'table' => env('POSTIE_TABLE', 'postie'),
 
 ];

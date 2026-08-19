@@ -13,4 +13,5 @@ return [
     'forceUnsubscribed' => 'You can not subscribe',
     'unavailableChannel' => 'Channel is unavailable for you',
     'fallbackGroup' => 'Other',
+    'router' => 'Enable',
 ];
