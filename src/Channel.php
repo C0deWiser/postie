@@ -47,8 +47,8 @@ class Channel implements Arrayable
             'mastodon', 'telegram', 'whatsapp' => 'bi bi-'.$this->name,
             'mail'                             => 'bi bi-envelope',
             'sms'                              => 'bi bi-chat',
-            'database'                         => 'bi bi-bell',
-            'broadcast'                        => 'bi bi-app-indicator',
+            'database'                         => 'bi bi-app-indicator',
+            'broadcast'                        => 'bi bi-window',
             default                            => 'bi bi-record-circle',
         };
     }
