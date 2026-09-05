@@ -9,10 +9,10 @@ Postie is a dashboard where users can manage their subscription preferences.
     * [Groups](#grouping-subscriptions)
     * [Preview](#previewing-notifications)
 
-Every `Notification` in application has corresponding audience.
-It doesn't mean, that everyone from audience will receive a notification, 
-but it is possible. So, Postie allows user to decide what channels he or she
-wants to be used to deliver notification. 
+Every `Notification` in the application has a corresponding audience.
+It doesn't mean that everyone from the audience will receive a notification,
+but it is possible. So, Postie allows the user to decide which channels should
+be used to deliver the notification.
 
 ![Postie](postie.png)
 
@@ -22,30 +22,30 @@ Install Postie into your project using the Composer package manager:
 
     composer require codewiser/postie
 
-After installing Postie, 
+After installing Postie,
 publish its assets using the `postie:install` Artisan command:
 
     php artisan postie:install
 
-Before running migrations you may want to change name of the table,
+Before running migrations, you may want to change the name of the table
 that keeps user subscription preferences. Then see `config/postie.php`.
 
 ```php
 'table' => env('POSTIE_TABLE', 'subscriptions'),
 ```
 
-After you configured table name run migrations:
+After you have configured the table name, run migrations:
 
     php artisan migrate
 
 ## Configuration
 
 After installing Postie, its service provider will be
-located at `App\Proviers\PostieServiceProvider`.
+located at `App\Providers\PostieServiceProvider`.
 
-First, provide information about every `Notification`, that users may manage. 
-Every subscription requires list of available channels 
-and possible audience (as a callable).
+First, provide information about every `Notification` that users may manage.
+Every subscription requires a list of available channels
+and a possible audience (as a callable).
 
 ```php
 use Codewiser\Postie\Subscription;
@@ -64,9 +64,9 @@ class PostieServiceProvider extends PostieApplicationServiceProvider
 }
 ```
 
-Second, replace `Notification::via()` method with 
-`\Codewiser\Postie\Notifications\Traits\Channelization` trait. 
-`Notification` will use delivery channels user preferred.
+Second, replace the `Notification::via()` method with the
+`\Codewiser\Postie\Notifications\Traits\Channelization` trait.
+The `Notification` will use the delivery channels the user preferred.
 
 ```php
 namespace App\Notifications;
@@ -101,12 +101,12 @@ class NewOrderNotification extends Notification implements ShouldQueue
 
 ### Subscription Object
 
-`Subscription` is an object, that helps to describe application notifications 
+`Subscription` is an object that helps to describe application notifications
 for Postie to understand.
 
-Initially, it is enough to pass notification class name, 
-query builder with users, who may receive such notification 
-and channels list, supported by notification. 
+Initially, it is enough to pass the notification class name,
+a query builder with users who may receive such notification,
+and a channels list supported by the notification.
 
 ```php
 use Codewiser\Postie\Subscription;
@@ -116,7 +116,7 @@ Subscription::to(AnyNotification::class)
     ->for(fn() => User::query())
 ```
 
-Moreover, you may define notification title and description.
+Moreover, you may define a notification title and description.
 
 ```php
 use Codewiser\Postie\Subscription;
@@ -130,11 +130,11 @@ Subscription::to(DailyNewsNotification::class)
 
 ### Channel Object
 
-When you set up `Subscription`, you may pass channel as a simple string. 
-But there are a way to define more complex channel representation.
+When you set up a `Subscription`, you may pass a channel as a simple string.
+But there is a way to define a more complex channel representation.
 
-You may use `\Codewiser\Postie\Channel` object to describe channel 
-with custom title, icon etc.:
+You may use the `\Codewiser\Postie\Channel` object to describe a channel
+with a custom title, icon, etc.:
 
 ```php
 use Codewiser\Postie\Channel;
@@ -148,10 +148,10 @@ $mail = Channel::via('mail')
 Subscription::to(DailyNewsNotification::class)->via($mail);
 ```
 
-You may define default state of channel. If channel is active, then all 
-users will receive notifications through this channel until they unsubscribe. 
-Vice versa, if channel is passive, all users will not receive notifications 
-via this channel until they subscribe to it.
+You may define the default state of a channel. If a channel is active, then
+all users will receive notifications through it until they unsubscribe.
+Vice versa, if a channel is passive, all users will not receive notifications
+via it until they subscribe to it.
 
 Default channel state is active.
 
@@ -161,8 +161,8 @@ use Codewiser\Postie\Channel;
 $mail = Channel::via('mail')->passive();
 ```
 
-If you want to disable user ability to manage channel preferences, you may 
-hide channel form user interface, or just force channel state.
+If you want to disable the user's ability to manage channel preferences, you
+may hide the channel from the user interface, or just force the channel state.
 
 ```php
 use Codewiser\Postie\Channel;
@@ -178,8 +178,8 @@ $mail = Channel::via('mail')->active()->forced();
 
 ### Grouping Subscriptions
 
-You may group subscriptions to create side menu for dashboard. Subscriptions 
-inherit channels and audience form a group, if defined.
+You may group subscriptions to create a side menu for the dashboard.
+Subscriptions inherit channels and audience from a group, if defined.
 
 ```php
 use Codewiser\Postie\Group;
@@ -197,14 +197,14 @@ Group::make('My group')
 Subscription::to(DailyNewsNotification::class)->group('Other group');
 ```
 
-> Subscription may ba assigned to a few groups.
+> Subscription may be assigned to a few groups.
 
 ### Previewing Notifications
 
-You may define notification preview. 
-So user can see how notification will be looks like.
+You may define a notification preview.
+So the user can see how the notification will look.
 
-Notification preview may be composed with model factories.
+Notification previews may be composed with model factories.
 
 ```php
 use Codewiser\Postie\Subscription;
@@ -213,15 +213,15 @@ Subscription::to(DailyNewsNotification::class)
     ->via('email')
     ->for(fn() => User::query())
     ->preview(function(string $channel, object $notifiable) {
-        
+
         $news = NewsItem::factory()->count(3)->make();
-        
+
         $notification = new DailyNewsNotification($news);
-        
+
         return match ($channel) {
             'mail'      => $notification->toMail($notifiable),
             'telegram'  => $notification->toTelegram($notifiable),
-            'database', 
+            'database',
             'broadcast' => $notification->toArray($notifiable),
         };
     });

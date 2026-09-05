@@ -13,7 +13,7 @@ class Group implements Arrayable
 {
     use HasChannels, HasAudience, HasTitle, HasVarieties;
 
-    protected array $subscriptions;
+    protected array $subscriptions = [];
     protected bool $fallback = false;
     protected int $weight = 0;
 
