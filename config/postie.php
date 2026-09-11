@@ -54,4 +54,18 @@ return [
 
     'table' => env('POSTIE_TABLE', 'postie'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Postie Notifications Path
+    |--------------------------------------------------------------------------
+    |
+    | Directories where Postie looks for notification classes that apply
+    | Postie attributes, to register them automatically.
+    |
+    */
+
+    'notifications_path' => [
+        app_path('Notifications')
+    ],
+
 ];

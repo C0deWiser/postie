@@ -6,6 +6,7 @@ use Codewiser\Postie\Channel;
 use Codewiser\Postie\Group;
 use Codewiser\Postie\PostieApplicationServiceProvider;
 use Codewiser\Postie\Subscription;
+use Codewiser\Postie\Tests\Fixtures\GroupedNotification;
 use Codewiser\Postie\Tests\Fixtures\PlainNotification;
 use Codewiser\Postie\Tests\Fixtures\ExampleNotification;
 use Codewiser\Postie\Tests\Fixtures\SecondExampleNotification;
@@ -35,6 +36,8 @@ class PostieServiceProvider extends PostieApplicationServiceProvider
     {
         return [
             Subscription::to(ExampleNotification::class),
+            // A notification class name is wrapped into a Subscription.
+            GroupedNotification::class,
             Group::make('Group')
                 ->icon('steam')
                 ->via(['telegram'])

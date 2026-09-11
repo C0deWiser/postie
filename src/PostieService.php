@@ -120,7 +120,9 @@ class PostieService
         }
 
         return $notifiable
-            ? $this->getSubscriptions($notifiable)->groups()
+            ? $this->getSubscriptions($notifiable)
+                ->groups()
+                ->orderedBy(array_values(self::$groups))
             : new Groups(array_values(self::$groups));
     }
 

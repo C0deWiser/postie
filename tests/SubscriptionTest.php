@@ -9,7 +9,11 @@ use Codewiser\Postie\PostieService;
 use Codewiser\Postie\Subscription;
 use Codewiser\Postie\Tests\Fixtures\GroupedNotification;
 use Codewiser\Postie\Tests\Fixtures\PlainNotification;
+use Codewiser\Postie\Tests\Fixtures\ChannelOnlyNotification;
+use Codewiser\Postie\Tests\Fixtures\EmptyNotification;
 use Codewiser\Postie\Tests\Fixtures\ExampleNotification;
+use Codewiser\Postie\Tests\Fixtures\PreviewedNotification;
+use Codewiser\Postie\Tests\Fixtures\SecondExampleNotification;
 
 class SubscriptionTest extends TestCase
 {
@@ -175,6 +179,90 @@ class SubscriptionTest extends TestCase
         $this->assertSame(['Group'], $subscription->getGroups()->map(
             fn(Group $group) => $group->getTitle()
         )->toArray());
+    }
+
+    public function test_notification_class_name_is_wrapped_into_subscription(): void
+    {
+        $postie = app(PostieService::class);
+
+        $subscription = $postie->getSubscriptions()->find(GroupedNotification::class);
+
+        $this->assertSame(GroupedNotification::class, $subscription->getNotification());
+
+        // Attributes applied to the notification class are still respected.
+        $this->assertSame(['Group'], $subscription->getGroups()->map(
+            fn(Group $group) => $group->getTitle()
+        )->toArray());
+    }
+
+    public function test_notifications_with_postie_attributes_are_discovered_automatically(): void
+    {
+        config(['postie.notifications_path' => [__DIR__.'/Fixtures']]);
+
+        $postie = app(PostieService::class);
+
+        $names = $postie->getSubscriptions()->names();
+
+        // Explicitly registered notifications are kept.
+        $this->assertContains(ExampleNotification::class, $names);
+        $this->assertContains(GroupedNotification::class, $names);
+
+        // Notifications applying the Channel attribute are discovered automatically.
+        $this->assertContains(ChannelOnlyNotification::class, $names);
+    }
+
+    public function test_notifications_are_discovered_across_multiple_paths(): void
+    {
+        config([
+            'postie.notifications_path' => [
+                __DIR__.'/Fixtures',
+                // A missing directory must be silently skipped.
+                __DIR__.'/DoesNotExist',
+            ],
+        ]);
+
+        $postie = app(PostieService::class);
+
+        $this->assertContains(
+            ChannelOnlyNotification::class,
+            $postie->getSubscriptions()->names()
+        );
+    }
+
+    public function test_notifications_path_accepts_comma_separated_string(): void
+    {
+        config(['postie.notifications_path' => __DIR__.'/Fixtures,/DoesNotExist']);
+
+        $postie = app(PostieService::class);
+
+        $this->assertContains(
+            ChannelOnlyNotification::class,
+            $postie->getSubscriptions()->names()
+        );
+    }
+
+    public function test_notification_without_channel_attribute_is_not_discovered(): void
+    {
+        config(['postie.notifications_path' => [__DIR__.'/Fixtures']]);
+
+        $postie = app(PostieService::class);
+
+        $names = $postie->getSubscriptions()->names();
+
+        // The Preview attribute alone does not make a notification subscribable.
+        $this->assertNotContains(PreviewedNotification::class, $names);
+    }
+
+    public function test_notifications_without_postie_attributes_are_not_discovered(): void
+    {
+        config(['postie.notifications_path' => [__DIR__.'/Fixtures']]);
+
+        $postie = app(PostieService::class);
+
+        $this->assertNotContains(
+            EmptyNotification::class,
+            $postie->getSubscriptions()->names()
+        );
     }
 
     public function test_predefined_groups_are_registered_in_service(): void

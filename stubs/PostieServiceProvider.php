@@ -43,7 +43,13 @@ class PostieServiceProvider extends PostieApplicationServiceProvider
     }
 
     /**
-     * Return an array of NotificationDefinition
+     * Return an array of NotificationDefinition.
+     *
+     * You may pass a notification class name as is:
+     *
+     *     'App\Notifications\MyNotification',
+     *
+     * or a fully defined Subscription (as below).
      *
      * @return array
      */

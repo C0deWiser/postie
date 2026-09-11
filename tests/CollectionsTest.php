@@ -309,4 +309,63 @@ class CollectionsTest extends TestCase
         $this->assertSame('Light', $groups->first()->getTitle());
         $this->assertSame('Heavy', $groups->last()->getTitle());
     }
+
+    public function test_groups_follow_predefined_order(): void
+    {
+        PostieService::$groups = [
+            Group::make('First'),
+            Group::make('Second'),
+            Group::make('Third'),
+        ];
+
+        PostieService::$subscriptions = [
+            Subscription::to(ExampleNotification::class)
+                ->for(fn() => User::query())
+                ->group('Third'),
+            Subscription::to(SecondExampleNotification::class)
+                ->for(fn() => User::query())
+                ->group('Second'),
+            Subscription::to(\Codewiser\Postie\Tests\Fixtures\PlainNotification::class)
+                ->for(fn() => User::query())
+                ->group('First'),
+        ];
+
+        $groups = $this->postie
+            ->getGroups($this->user)
+            ->reorder();
+
+        // Despite subscriptions refer groups in reverse order,
+        // predefined groups keep their declaration order.
+        $this->assertSame(
+            ['First', 'Second', 'Third'],
+            $groups->map->getTitle()->values()->all()
+        );
+    }
+
+    public function test_group_weight_overrides_predefined_order(): void
+    {
+        PostieService::$groups = [
+            Group::make('Second')->weight(10),
+            Group::make('First'),
+        ];
+
+        PostieService::$subscriptions = [
+            Subscription::to(SecondExampleNotification::class)
+                ->for(fn() => User::query())
+                ->group('Second'),
+            Subscription::to(ExampleNotification::class)
+                ->for(fn() => User::query())
+                ->group('First'),
+        ];
+
+        $groups = $this->postie
+            ->getGroups($this->user)
+            ->reorder();
+
+        // Declared order is Second, First — but weight moves First up.
+        $this->assertSame(
+            ['First', 'Second'],
+            $groups->map->getTitle()->values()->all()
+        );
+    }
 }

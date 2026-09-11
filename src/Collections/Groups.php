@@ -48,4 +48,28 @@ class Groups extends Collection
             }
         });
     }
+
+    /**
+     * Order groups by predefined group definitions.
+     *
+     * Groups are placed according to the order of the given definitions list.
+     * Groups not found in the definitions keep their relative order and go last.
+     *
+     * @param  array<int, Group>  $predefined
+     */
+    public function orderedBy(array $predefined): static
+    {
+        $shortcodes = array_map(
+            fn(Group $group) => $group->getShortcode(),
+            array_values($predefined)
+        );
+
+        $index = fn(Group $group) => ($position = array_search($group->getShortcode(), $shortcodes, true)) === false
+            ? PHP_INT_MAX
+            : $position;
+
+        return $this->sort(
+            fn(Group $a, Group $b) => $index($a) <=> $index($b)
+        );
+    }
 }

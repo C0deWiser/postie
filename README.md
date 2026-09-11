@@ -71,6 +71,10 @@ class PostieServiceProvider extends PostieApplicationServiceProvider
     public function notifications(): array
     {
         return [
+            // A notification class name is enough to register a subscription.
+            NewOrderNotification::class,
+
+            // Or configure the subscription explicitly.
             Subscription::to(NewOrderNotification::class)
                 ->via('mail', 'database')
                 ->for(fn() => User::query()->where('role', 'sales-manager')),
@@ -78,6 +82,15 @@ class PostieServiceProvider extends PostieApplicationServiceProvider
     }
 }
 ```
+
+Instead of listing every subscription, Postie can discover them automatically:
+any notification class in the `app/Notifications` directory that applies the
+`Channel` attribute is registered on its own. Its other attributes
+(`Subject`, `Description`, `Group`, `Preview`) are still respected.
+Explicitly defined subscriptions take precedence and are never duplicated.
+
+To use a different directory, publish the `postie` config and set the
+`notifications_path` option to an array of directories.
 
 Second, replace the `Notification::via()` method with the
 `\Codewiser\Postie\Notifications\Traits\Channelization` trait.
