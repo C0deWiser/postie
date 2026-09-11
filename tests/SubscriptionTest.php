@@ -11,6 +11,8 @@ use Codewiser\Postie\Tests\Fixtures\GroupedNotification;
 use Codewiser\Postie\Tests\Fixtures\PlainNotification;
 use Codewiser\Postie\Tests\Fixtures\ChannelOnlyNotification;
 use Codewiser\Postie\Tests\Fixtures\EmptyNotification;
+use Codewiser\Postie\Tests\Fixtures\EnumChannelNotification;
+use Codewiser\Postie\Tests\Fixtures\EnumGroupNotification;
 use Codewiser\Postie\Tests\Fixtures\ExampleNotification;
 use Codewiser\Postie\Tests\Fixtures\PreviewedNotification;
 use Codewiser\Postie\Tests\Fixtures\SecondExampleNotification;
@@ -177,6 +179,22 @@ class SubscriptionTest extends TestCase
         $subscription = Subscription::to(GroupedNotification::class);
 
         $this->assertSame(['Group'], $subscription->getGroups()->map(
+            fn(Group $group) => $group->getTitle()
+        )->toArray());
+    }
+
+    public function test_subscription_reads_channel_attribute_from_backed_enum(): void
+    {
+        $subscription = Subscription::to(EnumChannelNotification::class);
+
+        $this->assertSame(['mail'], $subscription->getChannels()->names());
+    }
+
+    public function test_subscription_reads_group_attribute_from_backed_enum(): void
+    {
+        $subscription = Subscription::to(EnumGroupNotification::class);
+
+        $this->assertSame(['Daily'], $subscription->getGroups()->map(
             fn(Group $group) => $group->getTitle()
         )->toArray());
     }

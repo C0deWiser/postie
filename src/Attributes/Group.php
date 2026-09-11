@@ -8,8 +8,10 @@ namespace Codewiser\Postie\Attributes;
 #[\Attribute(\Attribute::TARGET_CLASS | \Attribute::IS_REPEATABLE)]
 class Group
 {
-    public function __construct(public string $name)
+    public string $name;
+
+    public function __construct(string|\BackedEnum $name)
     {
-        //
+        $this->name = $name instanceof \BackedEnum ? (string) $name->value : $name;
     }
 }
