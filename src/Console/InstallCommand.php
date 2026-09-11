@@ -34,9 +34,6 @@ class InstallCommand extends Command
         $this->comment('Publishing Postie Assets...');
         $this->callSilent('vendor:publish', ['--tag' => 'postie-assets']);
 
-        $this->comment('Publishing Postie Configuration...');
-        $this->callSilent('vendor:publish', ['--tag' => 'postie-config']);
-
         $this->comment('Publishing Postie Migrations...');
         $this->callSilent('vendor:publish', ['--tag' => 'postie-migrations']);
 
@@ -62,7 +59,8 @@ class InstallCommand extends Command
 
         file_put_contents(config_path('app.php'), str_replace(
             "{$namespace}\\Providers\EventServiceProvider::class,".PHP_EOL,
-            "{$namespace}\\Providers\EventServiceProvider::class,".PHP_EOL."        {$namespace}\Providers\PostieServiceProvider::class,".PHP_EOL,
+            "{$namespace}\\Providers\EventServiceProvider::class,".PHP_EOL.
+            "        {$namespace}\Providers\PostieServiceProvider::class,".PHP_EOL,
             $appConfig
         ));
 

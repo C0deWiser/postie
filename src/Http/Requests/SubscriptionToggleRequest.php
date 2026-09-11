@@ -33,6 +33,10 @@ class SubscriptionToggleRequest extends FormRequest
     {
         $rules = [];
 
+        if (! in_array($this->notification, $postie->getSubscriptions()->names())) {
+            return $rules;
+        }
+
         $subscription = $postie->getSubscriptions()->find($this->notification);
 
         foreach ($subscription->getChannels()->names() as $name) {
