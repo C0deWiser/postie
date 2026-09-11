@@ -39,6 +39,15 @@ class PostieService
     public static $channels = [];
 
     /**
+     * Default group definitions, keyed by group shortcode.
+     *
+     * May be a callable, resolved lazily at first use.
+     *
+     * @var array<string, Group>|callable
+     */
+    public static $groups = [];
+
+    /**
      * Get materialized default channels, keyed by channel name.
      *
      * Lazy callable is evaluated once and cached.
@@ -93,11 +102,26 @@ class PostieService
     }
 
     /**
-     * Get all defined groups for a given notifiable.
+     * Get groups of subscriptions for a given notifiable.
+     *
+     * Without a notifiable, get materialized predefined groups,
+     * keyed by group shortcode. Lazy callable is evaluated once and cached.
      */
-    public function getGroups(Model $notifiable): Groups
+    public function getGroups(?Model $notifiable = null): Groups
     {
-        return $this->getSubscriptions($notifiable)->groups();
+        if (is_callable(self::$groups)) {
+            // Replace the callable with an empty map to guard against re-entrance.
+            $resolver = self::$groups;
+            self::$groups = [];
+
+            foreach (call_user_func($resolver) as $group) {
+                self::$groups[$group->getShortcode()] = $group;
+            }
+        }
+
+        return $notifiable
+            ? $this->getSubscriptions($notifiable)->groups()
+            : new Groups(array_values(self::$groups));
     }
 
     /**

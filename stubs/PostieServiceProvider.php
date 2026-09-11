@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Codewiser\Postie\Channel;
+use Codewiser\Postie\Group;
 use Codewiser\Postie\Subscription;
 use Codewiser\Postie\PostieApplicationServiceProvider;
 use Illuminate\Foundation\Auth\User;
@@ -29,6 +30,19 @@ class PostieServiceProvider extends PostieApplicationServiceProvider
     }
 
     /**
+     * Return an array of Group definitions.
+     *
+     * @return array
+     */
+    public function groups(): array
+    {
+        return [
+            Group::make('Group')
+                ->icon('asterisk'),
+        ];
+    }
+
+    /**
      * Return an array of NotificationDefinition
      *
      * @return array
@@ -38,6 +52,7 @@ class PostieServiceProvider extends PostieApplicationServiceProvider
         return [
             Subscription::to('App\Notifications\MyNotification')
                 ->title('Digest')
+                ->group('Group')
                 ->for(fn() => User::query())
                 ->via([
                     'mail',

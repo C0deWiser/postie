@@ -20,6 +20,17 @@ class PostieServiceProvider extends PostieApplicationServiceProvider
         ];
     }
 
+    public function groups(): array
+    {
+        return [
+            Group::make('Daily')
+                ->icon('broadcast')
+                ->weight(3)
+                ->via(['mail'])
+                ->for(fn() => \Codewiser\Postie\Tests\Models\User::query()),
+        ];
+    }
+
     public function notifications(): array
     {
         return [
