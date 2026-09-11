@@ -10,6 +10,25 @@ use Illuminate\Foundation\Auth\User;
 class PostieServiceProvider extends PostieApplicationServiceProvider
 {
     /**
+     * Return an array of Channel definitions.
+     *
+     * @return array
+     */
+    public function channels(): array
+    {
+        return [
+            Channel::via('mail')
+                ->title('E-mail')
+                ->icon('envelope'),
+
+            Channel::via('telegram')
+                ->title('Telegram')
+                ->icon('telegram')
+                ->passive(),
+        ];
+    }
+
+    /**
      * Return an array of NotificationDefinition
      *
      * @return array
@@ -22,8 +41,7 @@ class PostieServiceProvider extends PostieApplicationServiceProvider
                 ->for(fn() => User::query())
                 ->via([
                     'mail',
-                    Channel::via('telegram')
-                        ->passive()
+                    'telegram'
                 ])
         ];
     }

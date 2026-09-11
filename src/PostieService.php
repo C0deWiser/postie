@@ -2,6 +2,7 @@
 
 namespace Codewiser\Postie;
 
+use Codewiser\Postie\Collections\Channels;
 use Codewiser\Postie\Collections\Groups;
 use Codewiser\Postie\Collections\Subscriptions;
 use Codewiser\Postie\Events\UserSubscribe;
@@ -20,9 +21,42 @@ use Illuminate\Support\MultipleItemsFoundException;
 class PostieService
 {
     /**
-     * @var callable
+     * Subscription definitions.
+     *
+     * May be a callable, resolved lazily at first use.
+     *
+     * @var array<int, Subscription|Group>|callable
      */
-    public static $definitions;
+    public static $subscriptions = [];
+
+    /**
+     * Default channel definitions, keyed by channel name.
+     *
+     * May be a callable, resolved lazily at first use.
+     *
+     * @var array<string, Channel>|callable
+     */
+    public static $channels = [];
+
+    /**
+     * Get materialized default channels, keyed by channel name.
+     *
+     * Lazy callable is evaluated once and cached.
+     */
+    public function getChannels(): Channels
+    {
+        if (is_callable(self::$channels)) {
+            $definitions = [];
+
+            foreach (call_user_func(self::$channels) as $channel) {
+                $definitions[$channel->getName()] = $channel;
+            }
+
+            self::$channels = $definitions;
+        }
+
+        return new Channels(self::$channels);
+    }
 
     public function assetsAreCurrent(): bool
     {
@@ -47,7 +81,11 @@ class PostieService
      */
     public function getSubscriptions(Model $notifiable = null): Subscriptions
     {
-        $subscriptions = new Subscriptions(call_user_func(self::$definitions));
+        if (is_callable(self::$subscriptions)) {
+            self::$subscriptions = call_user_func(self::$subscriptions);
+        }
+
+        $subscriptions = new Subscriptions(self::$subscriptions);
 
         return $notifiable
             ? $subscriptions->for($notifiable)
@@ -106,13 +144,11 @@ class PostieService
      *
      * @param  class-string<Notification>  $notification
      * @param  array<string, bool>  $prefs
-     * @param  null|string  $variety
      */
     public function toggleUserPreferences(
         Model $notifiable,
         string $notification,
-        array $prefs,
-        ?string $variety
+        array $prefs
     ): Preference {
         $subscription = $this->getSubscriptions()->find($notification);
 

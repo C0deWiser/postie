@@ -56,6 +56,8 @@ class Subscriptions extends Collection
 
     /**
      * Get all defined groups.
+     *
+     * Groups sharing the same unique name are merged, keeping the one with richer attributes.
      */
     public function groups(): Groups
     {
@@ -63,7 +65,11 @@ class Subscriptions extends Collection
 
         foreach ($this as $subscription) {
             foreach ($subscription->getGroups() as $group) {
-                $groups[$group->getShortcode()] = $group;
+                $shortcode = $group->getShortcode();
+
+                if (! isset($groups[$shortcode]) || $group->getRank() > $groups[$shortcode]->getRank()) {
+                    $groups[$shortcode] = $group;
+                }
             }
         }
 

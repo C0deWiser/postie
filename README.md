@@ -11,8 +11,8 @@ Postie is a dashboard where users can manage their subscription preferences.
 
 Every `Notification` in the application has a corresponding audience.
 It doesn't mean that everyone from the audience will receive a notification,
-but it is possible. So, Postie allows the user to decide which channels should
-be used to deliver the notification.
+but it is possible. So, Postie **allows the user to decide** which channels 
+should be used to deliver the notification.
 
 ![Postie](postie.png)
 
@@ -52,7 +52,7 @@ use Codewiser\Postie\Subscription;
 use Codewiser\Postie\PostieApplicationServiceProvider;
 
 class PostieServiceProvider extends PostieApplicationServiceProvider
-{
+{    
     public function notifications(): array
     {
         return [
@@ -71,14 +71,12 @@ The `Notification` will use the delivery channels the user preferred.
 ```php
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use Codewiser\Postie\Notifications\Traits\Channelization;
 
-class NewOrderNotification extends Notification implements ShouldQueue
+class NewOrderNotification extends Notification
 {
-    use Queueable, Channelization;
+    use Channelization;
 
     public function __construct(public Order $order)
     {
@@ -99,6 +97,9 @@ class NewOrderNotification extends Notification implements ShouldQueue
 }
 ```
 
+> This is a minimal setup. All the following is mostly about making 
+> Web-Panel beautiful. 
+
 ### Subscription Object
 
 `Subscription` is an object that helps to describe application notifications
@@ -111,18 +112,39 @@ and a channels list supported by the notification.
 ```php
 use Codewiser\Postie\Subscription;
 
-Subscription::to(AnyNotification::class)
+Subscription::to(DailyNewsNotification::class)
     ->via('mail')
     ->for(fn() => User::query())
 ```
 
-Moreover, you may define a notification title and description.
+Moreover, you may define a notification title, description, supported channels 
+and other properties.
+
+```php
+namespace App\Notifications;
+
+use Codewiser\Postie\Attributes\Channel;
+use Codewiser\Postie\Attributes\Description;
+use Codewiser\Postie\Attributes\Subject;
+use Illuminate\Notifications\Notification;
+use Codewiser\Postie\Notifications\Traits\Channelization;
+
+#[Subject('Daily News Notification')]
+#[Description('Sends most interesting news digest')]
+#[Channel('mail')]
+class DailyNewsNotification extends Notification
+{
+    use Channelization;
+}
+```
+
+If you need translatable title/description, you should pass values directly 
+to `Subscription` object. 
 
 ```php
 use Codewiser\Postie\Subscription;
 
 Subscription::to(DailyNewsNotification::class)
-    ->via('mail')
     ->for(fn() => User::query())
     ->title(__('Daily News Notification'))
     ->description(__('Sends most interesting news digest'))
@@ -134,18 +156,28 @@ When you set up a `Subscription`, you may pass a channel as a simple string.
 But there is a way to define a more complex channel representation.
 
 You may use the `\Codewiser\Postie\Channel` object to describe a channel
-with a custom title, icon, etc.:
+with a custom title, icon, etc.
+
+The easiest approach is to describe all available channels in Service 
+Provider. Here you set up channels default properties. Later you may override 
+channel properties per notification.
 
 ```php
 use Codewiser\Postie\Channel;
-use Codewiser\Postie\Subscription;
+use Codewiser\Postie\PostieApplicationServiceProvider;
 
-$mail = Channel::via('mail')
-    ->icon('envelope')
-    ->title(__('via email'))
-    ->subtitle(__('Sends emails'));
-
-Subscription::to(DailyNewsNotification::class)->via($mail);
+class PostieServiceProvider extends PostieApplicationServiceProvider
+{    
+    public function channels(): array
+    {
+        return [
+            Channel::via('mail')
+                ->icon('envelope')
+                ->title(__('via email'))
+                ->subtitle(__('Sends emails'))
+        ];
+    }
+}
 ```
 
 You may define the default state of a channel. If a channel is active, then
@@ -156,24 +188,35 @@ via it until they subscribe to it.
 Default channel state is active.
 
 ```php
-use Codewiser\Postie\Channel;
+namespace App\Notifications;
 
-$mail = Channel::via('mail')->passive();
+use Codewiser\Postie\Attributes\Channel;
+use Illuminate\Notifications\Notification;
+use Codewiser\Postie\Notifications\Traits\Channelization;
+
+#[Channel('mail', default: false)]
+class DailyNewsNotification extends Notification
+{
+    use Channelization;
+}
 ```
 
 If you want to disable the user's ability to manage channel preferences, you
 may hide the channel from the user interface, or just force the channel state.
 
 ```php
-use Codewiser\Postie\Channel;
+namespace App\Notifications;
 
-$mail = Channel::via('database')->hidden();
-```
+use Codewiser\Postie\Attributes\Channel;
+use Illuminate\Notifications\Notification;
+use Codewiser\Postie\Notifications\Traits\Channelization;
 
-```php
-use Codewiser\Postie\Channel;
-
-$mail = Channel::via('mail')->active()->forced();
+#[Channel('mail', forced: true)]
+#[Channel('database', hidden: true)]
+class DailyNewsNotification extends Notification
+{
+    use Channelization;
+}
 ```
 
 ### Grouping Subscriptions
@@ -186,8 +229,7 @@ use Codewiser\Postie\Group;
 use Codewiser\Postie\Subscription;
 
 // Define group and assign a few subscriptions to it.
-Group::make('My group')
-    ->icon('broadcast')
+Group::make('My group', icon: 'broadcast')
     ->via('mail', 'database')
     ->for(fn() => User::query())
     ->add(Subscription::to(DailyNewsNotification::class))
@@ -195,6 +237,25 @@ Group::make('My group')
 
 // Assign subscription directly to a group.
 Subscription::to(DailyNewsNotification::class)->group('Other group');
+```
+
+> If Subscription defines own channels and audience — it will not inherit 
+> these properties from a group!
+
+Also, you may assign group using Notification attribute.
+
+```php
+namespace App\Notifications;
+
+use Codewiser\Postie\Attributes\Group;
+use Illuminate\Notifications\Notification;
+use Codewiser\Postie\Notifications\Traits\Channelization;
+
+#[Group('Other group')]
+class DailyNewsNotification extends Notification
+{
+    use Channelization;
+}
 ```
 
 > Subscription may be assigned to a few groups.
@@ -210,8 +271,6 @@ Notification previews may be composed with model factories.
 use Codewiser\Postie\Subscription;
 
 Subscription::to(DailyNewsNotification::class)
-    ->via('email')
-    ->for(fn() => User::query())
     ->preview(function(string $channel, object $notifiable) {
 
         $news = NewsItem::factory()->count(3)->make();

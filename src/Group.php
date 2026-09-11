@@ -5,13 +5,12 @@ namespace Codewiser\Postie;
 use Codewiser\Postie\Traits\HasAudience;
 use Codewiser\Postie\Traits\HasChannels;
 use Codewiser\Postie\Traits\HasTitle;
-use Codewiser\Postie\Traits\HasVarieties;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Str;
 
 class Group implements Arrayable
 {
-    use HasChannels, HasAudience, HasTitle, HasVarieties;
+    use HasChannels, HasAudience, HasTitle;
 
     protected array $subscriptions = [];
     protected bool $fallback = false;
@@ -64,10 +63,6 @@ class Group implements Arrayable
                 $channels[] = $channel;
             }
             $subscription->via($channels);
-        }
-
-        if (! $subscription->getVarieties()) {
-            $subscription->varieties($this->varieties);
         }
 
         if (! $subscription->hasAudience() && $this->hasAudience()) {
@@ -131,6 +126,18 @@ class Group implements Arrayable
     public function getWeight(): int
     {
         return $this->weight;
+    }
+
+    /**
+     * Get number of explicitly defined attributes.
+     *
+     * Used to merge groups sharing the same shortcode, keeping the richer one.
+     */
+    public function getRank(): int
+    {
+        return (int) ($this->getIcon() !== 'asterisk')
+            + (int) ($this->getWeight() !== 0)
+            + (int) $this->hasAudience();
     }
 
     /**

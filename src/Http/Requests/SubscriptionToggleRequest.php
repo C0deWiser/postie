@@ -12,7 +12,6 @@ use Illuminate\Validation\Rule;
  *
  * @property-read class-string<Notification> $notification Notification class name.
  * @property-read array<string, bool> $channels User preferences.
- * @property-read null|string $variety Variety.
  */
 class SubscriptionToggleRequest extends FormRequest
 {
@@ -27,8 +26,6 @@ class SubscriptionToggleRequest extends FormRequest
 
             'channels' => 'required|array',
             ...$this->getChannelRules($postie),
-
-            'variety' => 'nullable|string'
         ];
     }
 

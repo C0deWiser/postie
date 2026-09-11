@@ -7,6 +7,8 @@ use Codewiser\Postie\Collections\Channels;
 
 trait HasChannels
 {
+    use HasService;
+
     protected array $channels = [];
 
     /**
@@ -20,10 +22,18 @@ trait HasChannels
             $channels = func_get_args();
         }
 
+        $defaults = $this->getService()->getChannels();
+
         $this->channels = array_map(
-            fn($channel) => is_string($channel)
-                ? new Channel($channel)
-                : $channel,
+            function (string|Channel $channel) use ($defaults) {
+                if ($channel instanceof Channel) {
+                    return $channel;
+                }
+
+                $definition = $defaults->first(fn(Channel $c) => $c->getName() === $channel);
+
+                return $definition ? clone $definition : new Channel($channel);
+            },
             $channels
         );
 

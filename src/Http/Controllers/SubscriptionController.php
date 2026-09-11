@@ -35,8 +35,7 @@ class SubscriptionController extends Controller
         $preference = $postie->toggleUserPreferences(
             $request->user(),
             $request->notification,
-            $request->channels,
-            $request->variety
+            $request->channels
         );
 
         return PreferenceResource::make($preference);

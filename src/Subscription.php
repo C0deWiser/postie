@@ -2,18 +2,21 @@
 
 namespace Codewiser\Postie;
 
+use Codewiser\Postie\Attributes\Channel as ChannelAttribute;
+use Codewiser\Postie\Attributes\Description;
+use Codewiser\Postie\Attributes\Group as GroupAttribute;
+use Codewiser\Postie\Attributes\Subject;
 use Codewiser\Postie\Collections\Groups;
 use Codewiser\Postie\Traits\HasAudience;
 use Codewiser\Postie\Traits\HasChannels;
 use Codewiser\Postie\Traits\HasTitle;
-use Codewiser\Postie\Traits\HasVarieties;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
 
 class Subscription implements Arrayable
 {
-    use HasChannels, HasAudience, HasTitle, HasVarieties;
+    use HasChannels, HasAudience, HasTitle;
 
     protected ?string $description = null;
     /**
@@ -40,7 +43,42 @@ class Subscription implements Arrayable
      */
     public function __construct(protected string $notification)
     {
-        $this->title = (string) Str::of(class_basename($notification))->snake()->studly();
+        // Define subscription defaults using attributes applied to the notification class
+        $reflection = new \ReflectionClass($notification);
+
+        // Title
+        $attribute = $reflection->getAttributes(Subject::class);
+
+        $this->title = $attribute
+            ? $attribute[0]->newInstance()->title
+            : (string) Str::of(class_basename($notification))->snake()->studly();
+
+        // Description
+        $attribute = $reflection->getAttributes(Description::class);
+
+        if ($attribute) {
+            $this->description = $attribute[0]->newInstance()->description;
+        }
+
+        // Channels
+        $channels = $reflection->getAttributes(ChannelAttribute::class);
+
+        if ($channels) {
+            $this->channels = array_map(
+                fn(\ReflectionAttribute $attribute) => $attribute->newInstance()->toChannel(),
+                $channels
+            );
+        }
+
+        // Groups
+        $groups = $reflection->getAttributes(GroupAttribute::class);
+
+        if ($groups) {
+            $this->groups = array_map(
+                fn(\ReflectionAttribute $attribute) => new Group($attribute->newInstance()->name),
+                $groups
+            );
+        }
     }
 
     /**
@@ -131,7 +169,6 @@ class Subscription implements Arrayable
             'title'        => $this->getTitle(),
             'description'  => $this->getDescription(),
             'channels'     => $this->getChannels()->toArray(),
-            'varieties'    => $this->getVarieties(),
             //'preview'      => $this->hasPreview(),
         ];
     }

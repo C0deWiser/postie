@@ -11,7 +11,14 @@ abstract class PostieApplicationServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        PostieService::$definitions = function () {
+        Group::useService(fn() => app(PostieService::class));
+        Subscription::useService(fn() => app(PostieService::class));
+
+        PostieService::$channels = function () {
+            return $this->channels();
+        };
+
+        PostieService::$subscriptions = function () {
             $definitions = [];
 
             foreach ($this->notifications() as $notification) {
@@ -34,4 +41,14 @@ abstract class PostieApplicationServiceProvider extends ServiceProvider
      * @return array<int, Subscription|Group>
      */
     abstract public function notifications(): array;
+
+    /**
+     * Return an array of Channel definitions.
+     *
+     * @return array<int, Channel>
+     */
+    public function channels(): array
+    {
+        return [];
+    }
 }

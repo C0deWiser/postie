@@ -21,6 +21,11 @@
             "Codewiser\\Postie\\": "src"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Codewiser\\Postie\\Tests\\": "tests"
+        }
+    },
     "minimum-stability": "stable",
     "prefer-stable": true,
     "extra": {
@@ -29,5 +34,9 @@
                 "Codewiser\\Postie\\PostieServiceProvider"
             ]
         }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6",
+        "orchestra/testbench": "^8.0"
     }
 }
