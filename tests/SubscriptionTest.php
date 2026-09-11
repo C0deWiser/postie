@@ -176,4 +176,66 @@ class SubscriptionTest extends TestCase
             fn(Group $group) => $group->getTitle()
         )->toArray());
     }
+
+    public function test_predefined_groups_are_registered_in_service(): void
+    {
+        $postie = app(PostieService::class);
+
+        $groups = $postie->getGroups();
+
+        $this->assertCount(1, $groups);
+        $this->assertSame('Daily', $groups->first()->getTitle());
+        $this->assertSame('broadcast', $groups->first()->getIcon());
+        $this->assertSame(3, $groups->first()->getWeight());
+    }
+
+    public function test_subscription_references_predefined_group_by_name(): void
+    {
+        $subscription = Subscription::to(ExampleNotification::class)
+            ->via([])
+            ->group('Daily');
+
+        $group = $subscription->getGroups()->first();
+
+        $this->assertSame('Daily', $group->getTitle());
+        $this->assertSame('broadcast', $group->getIcon());
+        $this->assertSame(3, $group->getWeight());
+
+        // Subscriptions inherit channels from a predefined group.
+        $this->assertSame(['mail'], $subscription->getChannels()->names());
+    }
+
+    public function test_subscription_keeps_own_channels_when_referencing_predefined_group(): void
+    {
+        $subscription = Subscription::to(ExampleNotification::class)
+            ->group('Daily');
+
+        // ExampleNotification defines its own channels via the Channel attribute.
+        $this->assertSame(['mail', 'telegram'], $subscription->getChannels()->names());
+    }
+
+    public function test_subscription_inherits_audience_from_predefined_group(): void
+    {
+        $subscription = Subscription::to(ExampleNotification::class)
+            ->via([])
+            ->group('Daily');
+
+        // Subscription has no own audience, so it inherits the group audience.
+        $this->assertInstanceOf(
+            \Illuminate\Contracts\Database\Eloquent\Builder::class,
+            $subscription->getAudience()
+        );
+    }
+
+    public function test_subscription_keeps_own_audience_when_referencing_predefined_group(): void
+    {
+        $own = fn() => \Codewiser\Postie\Tests\Models\User::query()->whereKey(-1);
+
+        $subscription = Subscription::to(ExampleNotification::class)
+            ->for($own)
+            ->group('Daily');
+
+        // Subscription has its own audience, so the group audience must not be inherited.
+        $this->assertSame($own, $subscription->getAudienceCallback());
+    }
 }

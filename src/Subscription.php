@@ -80,7 +80,9 @@ class Subscription implements Arrayable
 
         if ($groups) {
             $this->groups = array_map(
-                fn(\ReflectionAttribute $attribute) => new Group($attribute->newInstance()->name),
+                fn(\ReflectionAttribute $attribute) => $this->attachGroup(
+                    $this->resolveGroup($attribute->newInstance()->name)
+                ),
                 $groups
             );
         }
@@ -97,12 +99,50 @@ class Subscription implements Arrayable
 
     /**
      * Put subscription to a group.
+     *
+     * A group referenced by its name inherits icon, weight and other properties
+     * from a predefined group definition (see PostieService::$groups).
      */
     public function group(Group|string $group): static
     {
-        $this->groups[] = $group instanceof Group ? $group : new Group($group);
+        $this->attachGroup(
+            $group instanceof Group ? $group : $this->resolveGroup($group)
+        );
 
         return $this;
+    }
+
+    /**
+     * Attach a group to the subscription.
+     *
+     * Subscriptions inherit channels and audience from a group,
+     * unless they define their own.
+     */
+    protected function attachGroup(Group $group): Group
+    {
+        if ($this->getChannels()->isEmpty() && $group->getChannels()->isNotEmpty()) {
+            $this->via($group->getChannels()->all());
+        }
+
+        if (! $this->hasAudience() && $group->hasAudience()) {
+            $this->for($group->getAudienceCallback());
+        }
+
+        $this->groups[] = $group;
+
+        return $group;
+    }
+
+    /**
+     * Get a predefined group by its title, or a bare group otherwise.
+     */
+    protected function resolveGroup(string $group): Group
+    {
+        $defined = $this->getService()
+            ->getGroups()
+            ->first(fn(Group $definition) => $definition->getTitle() === $group);
+
+        return $defined ? clone $defined : new Group($group);
     }
 
     /**

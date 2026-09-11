@@ -14,9 +14,9 @@ abstract class PostieApplicationServiceProvider extends ServiceProvider
         Group::useService(fn() => app(PostieService::class));
         Subscription::useService(fn() => app(PostieService::class));
 
-        PostieService::$channels = function () {
-            return $this->channels();
-        };
+        PostieService::$channels = fn() => $this->channels();
+
+        PostieService::$groups = fn() => $this->groups();
 
         PostieService::$subscriptions = function () {
             $definitions = [];
@@ -48,6 +48,16 @@ abstract class PostieApplicationServiceProvider extends ServiceProvider
      * @return array<int, Channel>
      */
     public function channels(): array
+    {
+        return [];
+    }
+
+    /**
+     * Return an array of Group definitions.
+     *
+     * @return array<int, Group>
+     */
+    public function groups(): array
     {
         return [];
     }

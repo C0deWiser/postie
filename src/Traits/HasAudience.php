@@ -40,6 +40,16 @@ trait HasAudience
         return is_callable($this->audience) ? call_user_func($this->audience) : null;
     }
 
+    /**
+     * Get raw audience callable.
+     *
+     * @return null|callable(mixed): Builder<Notifiable>
+     */
+    public function getAudienceCallback(): ?callable
+    {
+        return $this->audience;
+    }
+
     public function hasAudience(): bool
     {
         return is_callable($this->audience);

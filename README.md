@@ -248,14 +248,42 @@ class DailyNewsNotification extends Notification
 ### Grouping Subscriptions
 
 You may group subscriptions to create a side menu for the dashboard.
-Subscriptions inherit channels and audience from a group, if defined.
-You may pass either a `Subscription` or a notification class name to the
-`add()` method.
+
+The easiest approach is to describe all groups in the Service Provider.
+Here you set up group default properties (icon, weight, channels, audience).
+Later a subscription may reference a group by its name and inherit these
+properties, just like channels.
 
 ```php
 use Codewiser\Postie\Group;
+
+public function groups(): array
+{
+    return [
+        Group::make('My group', icon: 'broadcast')
+            ->via('mail', 'database')
+            ->for(fn() => User::query()),
+    ];
+}
+```
+
+In `notifications()` you may reference a predefined group by its name:
+
+```php
 use Codewiser\Postie\Subscription;
 
+public function notifications(): array
+{
+    return [
+        Subscription::to(DailyNewsNotification::class)->group('My group'),
+        Subscription::to(NewOrderNotification::class)->group('My group'),
+    ];
+}
+```
+
+Or define a group right inside `notifications()`:
+
+```php
 public function notifications(): array
 {
     return [
@@ -285,7 +313,7 @@ use Codewiser\Postie\Attributes\Group;
 use Illuminate\Notifications\Notification;
 use Codewiser\Postie\Notifications\Traits\Channelization;
 
-#[Group('Other group')]
+#[Group('Another group')]
 class DailyNewsNotification extends Notification
 {
     use Channelization;
