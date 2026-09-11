@@ -153,6 +153,10 @@ class DailyNewsNotification extends Notification
 }
 ```
 
+> Class-level attributes (`Subject`, `Description`, `Channel`, `Group`)
+> are not inherited from a parent class: apply them to each Notification
+> that must use them.
+
 If you need translatable title/description, you should pass values directly
 to the `Subscription` object.
 
@@ -354,6 +358,9 @@ class DailyNewsNotification extends Notification
     }
 }
 ```
+
+> The `Preview` attribute will be inherited form a parent classes of 
+> notification.
 
 Previews defined via the subscription `preview()` method take precedence
 over the `Preview` attribute.
