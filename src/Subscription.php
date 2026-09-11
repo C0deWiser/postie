@@ -5,6 +5,7 @@ namespace Codewiser\Postie;
 use Codewiser\Postie\Attributes\Channel as ChannelAttribute;
 use Codewiser\Postie\Attributes\Description;
 use Codewiser\Postie\Attributes\Group as GroupAttribute;
+use Codewiser\Postie\Attributes\Preview;
 use Codewiser\Postie\Attributes\Subject;
 use Codewiser\Postie\Collections\Groups;
 use Codewiser\Postie\Traits\HasAudience;
@@ -23,6 +24,10 @@ class Subscription implements Arrayable
      * @var null|callable
      */
     protected $preview = null;
+    /**
+     * @var null|string  Name of a static method, marked with the Preview attribute.
+     */
+    protected ?string $previewMethod = null;
     /**
      * @var array<int, Group>
      */
@@ -78,6 +83,15 @@ class Subscription implements Arrayable
                 fn(\ReflectionAttribute $attribute) => new Group($attribute->newInstance()->name),
                 $groups
             );
+        }
+
+        // Preview
+        foreach ($reflection->getMethods(\ReflectionMethod::IS_STATIC) as $method) {
+            if ($method->getAttributes(Preview::class)) {
+                $this->previewMethod = $method->getName();
+
+                break;
+            }
         }
     }
 
@@ -158,7 +172,25 @@ class Subscription implements Arrayable
             $channel = $channel->getName();
         }
 
-        return is_callable($this->preview) ? call_user_func($this->preview, $channel, $notifiable) : null;
+        return is_callable($this->preview)
+            ? call_user_func($this->preview, $channel, $notifiable)
+            : $this->callAttributePreview($channel, $notifiable);
+    }
+
+    /**
+     * Call a static method, marked with the Preview attribute, to get the preview.
+     *
+     * Such method should return a callable.
+     */
+    protected function callAttributePreview(string $channel, object $notifiable): mixed
+    {
+        if (! $this->previewMethod) {
+            return null;
+        }
+
+        $preview = call_user_func([$this->notification, $this->previewMethod]);
+
+        return is_callable($preview) ? call_user_func($preview, $channel, $notifiable) : null;
     }
 
     public function toArray(): array

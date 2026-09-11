@@ -245,6 +245,8 @@ class DailyNewsNotification extends Notification
 
 You may group subscriptions to create a side menu for the dashboard.
 Subscriptions inherit channels and audience from a group, if defined.
+You may pass either a `Subscription` or a notification class name to the
+`add()` method.
 
 ```php
 use Codewiser\Postie\Group;
@@ -257,7 +259,7 @@ public function notifications(): array
         Group::make('My group', icon: 'broadcast')
             ->via('mail', 'database')
             ->for(fn() => User::query())
-            ->add(Subscription::to(DailyNewsNotification::class))
+            ->add(DailyNewsNotification::class)
             ->add(Subscription::to(NewOrderNotification::class)),
 
         // Assign subscription directly to a group.
@@ -316,3 +318,42 @@ Subscription::to(DailyNewsNotification::class)
         };
     });
 ```
+
+Alternatively, you may define the preview inside the Notification class.
+Mark a static method with the `Preview` attribute — Postie will use it
+to compose the preview.
+
+> Such method should return a callable.
+
+```php
+namespace App\Notifications;
+
+use Codewiser\Postie\Attributes\Preview;
+use Illuminate\Notifications\Notification;
+use Codewiser\Postie\Notifications\Traits\Channelization;
+
+class DailyNewsNotification extends Notification
+{
+    use Channelization;
+
+    #[Preview]
+    public static function preview(): callable
+    {
+        return function (string $channel, object $notifiable) {
+
+            $news = NewsItem::factory()->count(3)->make();
+
+            $notification = new DailyNewsNotification($news);
+
+            return match ($channel) {
+                'mail'      => $notification->toMail($notifiable),
+                'database',
+                'broadcast' => $notification->toArray($notifiable),
+            };
+        };
+    }
+}
+```
+
+Previews defined via the subscription `preview()` method take precedence
+over the `Preview` attribute.

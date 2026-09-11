@@ -6,6 +6,7 @@ use Codewiser\Postie\Channel;
 use Codewiser\Postie\PostieService;
 use Codewiser\Postie\Subscription;
 use Codewiser\Postie\Tests\Fixtures\ExampleNotification;
+use Codewiser\Postie\Tests\Fixtures\PreviewedNotification;
 use Codewiser\Postie\Tests\Models\User;
 
 class PreviewTest extends TestCase
@@ -46,6 +47,32 @@ class PreviewTest extends TestCase
             ->preview(fn(string $channel, object $notifiable) => 'Preview');
 
         $this->assertTrue($subscription->hasPreview(Channel::via('mail'), $this->user));
+    }
+
+    public function test_preview_attribute_uses_static_callable(): void
+    {
+        $subscription = Subscription::to(PreviewedNotification::class);
+
+        $this->assertSame('Attribute preview for mail', $subscription->getPreview('mail', $this->user));
+        $this->assertSame('Attribute preview for telegram', $subscription->getPreview('telegram', $this->user));
+        $this->assertTrue($subscription->hasPreview(Channel::via('mail'), $this->user));
+    }
+
+    public function test_fluent_preview_overrides_attribute(): void
+    {
+        $subscription = Subscription::to(PreviewedNotification::class)
+            ->preview(fn(string $channel, object $notifiable) => "Fluent preview for $channel");
+
+        $this->assertSame('Fluent preview for mail', $subscription->getPreview('mail', $this->user));
+        $this->assertTrue($subscription->hasPreview(Channel::via('mail'), $this->user));
+    }
+
+    public function test_attribute_without_static_method_returns_null(): void
+    {
+        $subscription = Subscription::to(ExampleNotification::class);
+
+        $this->assertFalse($subscription->hasPreview(Channel::via('mail'), $this->user));
+        $this->assertNull($subscription->getPreview('mail', $this->user));
     }
 
     public function test_missing_preview_returns_false_and_null(): void

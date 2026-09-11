@@ -6,6 +6,7 @@ use Codewiser\Postie\Traits\HasAudience;
 use Codewiser\Postie\Traits\HasChannels;
 use Codewiser\Postie\Traits\HasTitle;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
 
 class Group implements Arrayable
@@ -53,16 +54,19 @@ class Group implements Arrayable
 
     /**
      * Add subscription to the group.
+     *
+     * @param  Subscription|class-string<Notification>  $subscription  A subscription or a notification class name.
      */
-    public function add(Subscription $subscription): static
+    public function add(Subscription|string $subscription): static
     {
+        if (! $subscription instanceof Subscription) {
+            $subscription = Subscription::to($subscription);
+        }
+
         if ($subscription->getChannels()->isEmpty()) {
-            // we cant just pass collection->toArray, as every channel is arrayable too
-            $channels = [];
-            foreach ($this->getChannels() as $channel) {
-                $channels[] = $channel;
-            }
-            $subscription->via($channels);
+            $subscription->via(
+                $this->getChannels()->all()
+            );
         }
 
         if (! $subscription->hasAudience() && $this->hasAudience()) {

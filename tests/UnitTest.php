@@ -7,6 +7,7 @@ use Codewiser\Postie\Group;
 use Codewiser\Postie\PostieService;
 use Codewiser\Postie\Subscription;
 use Codewiser\Postie\Tests\Fixtures\ExampleNotification;
+use Codewiser\Postie\Tests\Fixtures\GroupedNotification;
 use Codewiser\Postie\Tests\Models\User;
 
 class UnitTest extends TestCase
@@ -178,6 +179,19 @@ class UnitTest extends TestCase
         $group->add($subscription);
 
         $this->assertTrue($subscription->hasAudience());
+    }
+
+    public function test_group_add_accepts_notification_class_name(): void
+    {
+        $group = Group::make('Group')->via('mail')->for(fn() => User::query());
+
+        $group->add(GroupedNotification::class);
+
+        $subscription = $group->getSubscriptions()[0];
+
+        $this->assertSame(GroupedNotification::class, $subscription->getNotification());
+        $this->assertTrue($subscription->hasAudience());
+        $this->assertSame(['mail'], $subscription->getChannels()->names());
     }
 
     public function test_group_add_keeps_subscription_audience_if_present(): void
