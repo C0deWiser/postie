@@ -3,19 +3,21 @@
 namespace Codewiser\Postie\Tests;
 
 use Codewiser\Postie\Attributes\Channel as ChannelAttribute;
+use Codewiser\Postie\Audience;
 use Codewiser\Postie\Collections\Subscriptions;
 use Codewiser\Postie\Group;
 use Codewiser\Postie\PostieService;
 use Codewiser\Postie\Subscription;
 use Codewiser\Postie\Tests\Fixtures\GroupedNotification;
-use Codewiser\Postie\Tests\Fixtures\PlainNotification;
+use Codewiser\Postie\Tests\Fixtures\ArrayChannelNotification;
+use Codewiser\Postie\Tests\Fixtures\ArrayGroupedNotification;
 use Codewiser\Postie\Tests\Fixtures\ChannelOnlyNotification;
 use Codewiser\Postie\Tests\Fixtures\EmptyNotification;
-use Codewiser\Postie\Tests\Fixtures\EnumChannelNotification;
-use Codewiser\Postie\Tests\Fixtures\EnumGroupNotification;
 use Codewiser\Postie\Tests\Fixtures\ExampleNotification;
+use Codewiser\Postie\Tests\Fixtures\PlainNotification;
 use Codewiser\Postie\Tests\Fixtures\PreviewedNotification;
 use Codewiser\Postie\Tests\Fixtures\SecondExampleNotification;
+use Codewiser\Postie\Tests\Models\User;
 
 class SubscriptionTest extends TestCase
 {
@@ -85,6 +87,29 @@ class SubscriptionTest extends TestCase
         $this->assertSame('E-mail', $subscription->getChannels()->find('mail')->getTitle());
     }
 
+    public function test_subscription_reads_array_of_groups_from_attribute(): void
+    {
+        $subscription = Subscription::to(ArrayGroupedNotification::class);
+
+        $this->assertSame(
+            ['Daily', 'Weekly'],
+            $subscription->getGroups()->map(fn(Group $group) => $group->getTitle())->toArray()
+        );
+    }
+
+    public function test_subscription_reads_array_of_channels_from_attribute(): void
+    {
+        $subscription = Subscription::to(ArrayChannelNotification::class);
+
+        $channels = $subscription->getChannels();
+
+        $this->assertSame(['mail', 'telegram'], $channels->names());
+
+        // Flags are applied to every given channel.
+        $this->assertTrue($channels->find('mail')->getDefault());
+        $this->assertTrue($channels->find('telegram')->getDefault());
+    }
+
     public function test_group_registers_subscription(): void
     {
         $postie = app(PostieService::class);
@@ -126,7 +151,8 @@ class SubscriptionTest extends TestCase
         $rich = Group::make('Same Name')
             ->icon('bell')
             ->weight(5)
-            ->for(fn() => \Codewiser\Postie\Models\Preference::query());
+            ->for(Audience::make('preferences', 'Preferences')
+                ->for(fn() => \Codewiser\Postie\Models\Preference::query()));
 
         $subscriptions = new Subscriptions([
             Subscription::to(PlainNotification::class)->group('Same Name'),
@@ -138,7 +164,7 @@ class SubscriptionTest extends TestCase
         $this->assertCount(1, $groups);
         $this->assertSame('bell', $groups->first()->getIcon());
         $this->assertSame(5, $groups->first()->getWeight());
-        $this->assertTrue($groups->first()->hasAudience());
+        $this->assertTrue($groups->first()->getAudience()->hasBuilder());
     }
 
     public function test_groups_with_same_richness_keep_the_first(): void
@@ -179,22 +205,6 @@ class SubscriptionTest extends TestCase
         $subscription = Subscription::to(GroupedNotification::class);
 
         $this->assertSame(['Group'], $subscription->getGroups()->map(
-            fn(Group $group) => $group->getTitle()
-        )->toArray());
-    }
-
-    public function test_subscription_reads_channel_attribute_from_backed_enum(): void
-    {
-        $subscription = Subscription::to(EnumChannelNotification::class);
-
-        $this->assertSame(['mail'], $subscription->getChannels()->names());
-    }
-
-    public function test_subscription_reads_group_attribute_from_backed_enum(): void
-    {
-        $subscription = Subscription::to(EnumGroupNotification::class);
-
-        $this->assertSame(['Daily'], $subscription->getGroups()->map(
             fn(Group $group) => $group->getTitle()
         )->toArray());
     }
@@ -329,19 +339,70 @@ class SubscriptionTest extends TestCase
         // Subscription has no own audience, so it inherits the group audience.
         $this->assertInstanceOf(
             \Illuminate\Contracts\Database\Eloquent\Builder::class,
-            $subscription->getAudience()
+            $subscription->getAudience()->getBuilder()
         );
     }
 
     public function test_subscription_keeps_own_audience_when_referencing_predefined_group(): void
     {
-        $own = fn() => \Codewiser\Postie\Tests\Models\User::query()->whereKey(-1);
+        $own = Audience::make('none', 'None')
+            ->for(fn() => \Codewiser\Postie\Tests\Models\User::query()->whereKey(-1));
 
         $subscription = Subscription::to(ExampleNotification::class)
             ->for($own)
             ->group('Daily');
 
         // Subscription has its own audience, so the group audience must not be inherited.
-        $this->assertSame($own, $subscription->getAudienceCallback());
+        $this->assertSame($own->getCallback(), $subscription->getAudience()->getCallback());
+    }
+
+    public function test_subscription_to_array_lists_every_group_audience(): void
+    {
+        $subscription = Subscription::to(ExampleNotification::class)
+            ->group(Group::make('Managerial')->for(
+                Audience::make('managers', 'Managers')->for(fn() => User::query())
+            ))
+            ->group(Group::make('VIP')->for(
+                Audience::make('vips', 'VIPs')->for(fn() => User::query())
+            ));
+
+        $this->assertSame(
+            ['Managers', 'VIPs'],
+            $subscription->toArray()['audiences']
+        );
+    }
+
+    public function test_subscription_own_audience_ignores_group_audience(): void
+    {
+        // A user sitting in the own audience only.
+        $ownUser = User::create([
+            'name'     => 'John Smith',
+            'email'    => 'smith@doe.com',
+            'password' => 'secret',
+        ]);
+
+        // A user sitting in the group audience only.
+        $otherUser = User::create([
+            'name'     => 'Jane Doe',
+            'email'    => 'jane@doe.com',
+            'password' => 'secret',
+        ]);
+
+        $subscription = Subscription::to(ExampleNotification::class)
+            ->for(Audience::make('own', 'Own')->for(fn() => User::query()->whereKey($ownUser->getKey())))
+            ->group(Group::make('Other')->for(
+                Audience::make('others', 'Others')->for(fn() => User::query()->whereKey($otherUser->getKey()))
+            ));
+
+        $subscriptions = new Subscriptions([$subscription]);
+
+        // In own audience, despite not belonging to the group audience.
+        $this->assertCount(1, $subscriptions->for($ownUser));
+
+        // In group audience only, not in own audience.
+        $this->assertCount(0, $subscriptions->for($otherUser));
+
+        // Own audience is displayed, group audiences are hidden.
+        $this->assertSame(['Own'], $subscription->getAudienceTitles());
     }
 }

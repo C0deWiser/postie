@@ -16,6 +16,7 @@ class Group implements Arrayable
     protected array $subscriptions = [];
     protected bool $fallback = false;
     protected int $weight = 0;
+    protected ?int $position = null;
 
     /**
      * Fallback group will be appended to any subscription without groups.
@@ -69,8 +70,10 @@ class Group implements Arrayable
             );
         }
 
-        if (! $subscription->hasAudience() && $this->hasAudience()) {
-            $subscription->for($this->audience);
+        if (! $subscription->isOwnAudience()
+            && ! $subscription->getAudience()
+            && ($this->getAudience()?->hasBuilder() ?? false)) {
+            $subscription->inheritAudience($this->getAudience());
         }
 
         $this->subscriptions[] = $subscription;
@@ -92,10 +95,22 @@ class Group implements Arrayable
 
     /**
      * Set group weight. Havier groups will fall down to the bottom of list.
+     *
+     * Groups without an explicit weight keep their order of appearance.
      */
     public function weight(int $weight): static
     {
         $this->weight = $weight;
+
+        return $this;
+    }
+
+    /**
+     * Set group position of appearance among predefined group definitions.
+     */
+    public function position(int $position): static
+    {
+        $this->position = $position;
 
         return $this;
     }
@@ -133,6 +148,14 @@ class Group implements Arrayable
     }
 
     /**
+     * Get group position of appearance among predefined group definitions.
+     */
+    public function getPosition(): ?int
+    {
+        return $this->position;
+    }
+
+    /**
      * Get number of explicitly defined attributes.
      *
      * Used to merge groups sharing the same shortcode, keeping the richer one.
@@ -141,7 +164,7 @@ class Group implements Arrayable
     {
         return (int) ($this->getIcon() !== 'asterisk')
             + (int) ($this->getWeight() !== 0)
-            + (int) $this->hasAudience();
+            + (int) ($this->getAudience()?->hasBuilder() ?? false);
     }
 
     /**

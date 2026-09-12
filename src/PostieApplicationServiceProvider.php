@@ -3,8 +3,10 @@
 namespace Codewiser\Postie;
 
 use Codewiser\Postie\Attributes\Channel as ChannelAttribute;
+use Codewiser\Postie\Attributes\Channels as ChannelsAttribute;
 use Codewiser\Postie\Attributes\Description;
 use Codewiser\Postie\Attributes\Group as GroupAttribute;
+use Codewiser\Postie\Attributes\Groups as GroupsAttribute;
 use Codewiser\Postie\Attributes\Preview;
 use Codewiser\Postie\Attributes\Subject;
 use Illuminate\Notifications\Notification;
@@ -24,6 +26,8 @@ abstract class PostieApplicationServiceProvider extends ServiceProvider
         PostieService::$channels = fn() => $this->channels();
 
         PostieService::$groups = fn() => $this->groups();
+
+        PostieService::$audiences = fn() => $this->audiences();
 
         PostieService::$subscriptions = function () {
             $definitions = [];
@@ -49,7 +53,7 @@ abstract class PostieApplicationServiceProvider extends ServiceProvider
             // Discover notifications that apply Postie attributes.
             foreach ($this->discoverNotifications() as $notification) {
                 if (! in_array($notification, $registered, true)) {
-                    $definitions[] = Subscription::to($notification);
+                    $definitions[] = Subscription::to($notification)->discovered();
                 }
             }
 
@@ -138,8 +142,15 @@ abstract class PostieApplicationServiceProvider extends ServiceProvider
 
         $reflection = new \ReflectionClass($class);
 
-        if ($reflection->getAttributes(ChannelAttribute::class)) {
-            return true;
+        foreach ([
+            ChannelAttribute::class,
+            ChannelsAttribute::class,
+            GroupAttribute::class,
+            GroupsAttribute::class,
+        ] as $attribute) {
+            if ($reflection->getAttributes($attribute)) {
+                return true;
+            }
         }
 
         return false;
@@ -171,6 +182,16 @@ abstract class PostieApplicationServiceProvider extends ServiceProvider
      * @return array<int, Group>
      */
     public function groups(): array
+    {
+        return [];
+    }
+
+    /**
+     * Return an array of Audience definitions.
+     *
+     * @return array<int, Audience>
+     */
+    public function audiences(): array
     {
         return [];
     }

@@ -14,4 +14,5 @@ return [
     'unavailableChannel' => 'Этот способ вам недоступен',
     'fallbackGroup' => 'Другое',
     'router' => 'Подключить',
+    'anyone' => 'Все пользователи',
 ];

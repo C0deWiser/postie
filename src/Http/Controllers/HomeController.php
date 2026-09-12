@@ -16,15 +16,21 @@ class HomeController extends Controller
     {
         $groups = $postie->getGroups($request->user());
 
+        $unconfigured = $postie->unconfiguredChannels($request->user());
+
         return view('postie::layout', [
             'assetsAreCurrent'      => $postie->assetsAreCurrent(),
             'cssFile'               => 'app.css',
             'cssBootstrapIcons'     => 'bootstrap-icons.css',
-            'postieScriptVariables' => $postie->scriptVariables(),
+            'postieScriptVariables' => $postie->scriptVariables() + [
+                'unconfigured' => $unconfigured,
+            ],
             'isDownForMaintenance'  => app()->isDownForMaintenance(),
             'groups'                => $groups->reorder(),
+            'unconfigured'          => $unconfigured,
             'trans'                 => Arr::dot([
-                'subscriptions' => Lang::get('postie::subscriptions')
+                'subscriptions' => Lang::get('postie::subscriptions'),
+                'configure'     => Lang::get('postie::configure')
             ])
         ]);
     }

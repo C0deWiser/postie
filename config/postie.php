@@ -17,7 +17,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Postie Path
+    | Postie Dashboard Path
     |--------------------------------------------------------------------------
     |
     | This is the URI path where Postie will be accessible from. Feel free
@@ -66,6 +66,36 @@ return [
 
     'notifications_path' => [
         app_path('Notifications')
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Postie Dashboard
+    |--------------------------------------------------------------------------
+    |
+    | Settings for the Postie dashboard UI.
+    |
+    */
+
+    'dashboard' => [
+
+        /*
+        |--------------------------------------------------------------------------
+        | Dashboard Badges
+        |--------------------------------------------------------------------------
+        |
+        | Show or hide badges under subscription titles in the dashboard.
+        |
+        */
+
+        'badges' => [
+
+            // Show an audience badge when a subscription is scoped to an audience.
+            'audience' => true,
+
+            // Show a badge for every group a subscription is attached to.
+            'groups' => true,
+        ],
     ],
 
 ];

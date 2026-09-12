@@ -28,7 +28,7 @@ class FeatureTest extends TestCase
 
         PostieService::$subscriptions = [
             Subscription::to(ExampleNotification::class)
-                ->for(fn() => User::query())
+->for('everyone')
                 ->preview(fn(string $channel) => 'Preview for '.$channel),
         ];
     }
@@ -66,7 +66,7 @@ class FeatureTest extends TestCase
     public function test_subscriptions_index_filters_by_group(): void
     {
         PostieService::$subscriptions = [
-            Subscription::to(ExampleNotification::class)->for(fn() => User::query())->group('Group 1'),
+            Subscription::to(ExampleNotification::class)->for('everyone')->group('Group 1'),
         ];
 
         $group = new \Codewiser\Postie\Group('Group 1');

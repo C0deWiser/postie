@@ -2,6 +2,8 @@
 
 namespace Codewiser\Postie\Collections;
 
+use Codewiser\Postie\Audience;
+use Codewiser\Postie\Group;
 use Codewiser\Postie\Models\Preference;
 use Codewiser\Postie\Subscription;
 use Illuminate\Database\Eloquent\Model;
@@ -45,13 +47,35 @@ class Subscriptions extends Collection
 
     /**
      * Filter notifiable relevant subscriptions.
+     *
+     * A subscription defining its own audience matches only that audience,
+     * ignoring any group audiences.
+     * Otherwise it matches when the notifiable belongs to every audience
+     * of the groups it is attached to (if any).
+     * A subscription without any audience applies to everyone.
      */
     public function for(Model $notifiable): static
     {
         return $this->filter(
-            fn(Subscription $subscription) => $subscription
-                ->getAudience()?->find($notifiable->getKey())
+            fn(Subscription $subscription) => $subscription->isOwnAudience()
+                // Own audience wins and group audiences are ignored
+                ? $this->withinAudience($subscription->getAudience(), $notifiable)
+                // Otherwise notifiable must belong to every group audience (if any)
+                : $subscription->getGroups()->every(
+                    fn(Group $group) => $this->withinAudience($group->getAudience(), $notifiable)
+                )
         );
+    }
+
+    /**
+     * Check whether the notifiable belongs to the given audience.
+     *
+     * An audience without a builder allows everyone.
+     */
+    protected function withinAudience(?Audience $audience, Model $notifiable): bool
+    {
+        return ! ($audience?->hasBuilder() ?? false)
+            || (bool) $audience->getBuilder()?->find($notifiable->getKey());
     }
 
     /**
@@ -97,11 +121,36 @@ class Subscriptions extends Collection
         $preferences = Preference::for($notifiable, $this->names())->get();
 
         return $this
-            // Put subscriptions with fallback group to the bottom
-            ->sort(fn(
-                Subscription $a,
-                Subscription $b
-            ) => ($a->getGroups()->hasFallback() ? 1 : 0) - ($b->getGroups()->hasFallback() ? 1 : 0))
+            // Sort subscriptions respecting group weight.
+            // Ungrouped subscriptions (fallback group) go to the bottom,
+            // auto-discovered ones ahead of explicitly defined.
+            ->sort(function (Subscription $a, Subscription $b) {
+                // Order a subscription by the biggest of its groups' effective
+                // positions: group weight first, or order of appearance
+                // for groups without an explicit weight.
+                $key = fn(Subscription $subscription) => $subscription
+                    ->getGroups()
+                    ->max(fn(Group $group) => [
+                        $group->getWeight(),
+                        $group->getPosition() ?? PHP_INT_MAX,
+                    ]);
+
+                $keyA = $key($a);
+                $keyB = $key($b);
+
+                if ($keyA !== $keyB) {
+                    return $keyA <=> $keyB;
+                }
+
+                // Among ungrouped subscriptions, put auto-discovered first.
+                if ($a->getGroups()->hasFallback()
+                    && $b->getGroups()->hasFallback()
+                    && $a->isDiscovered() !== $b->isDiscovered()) {
+                    return $a->isDiscovered() ? -1 : 1;
+                }
+
+                return 0;
+            })
             // Drop resorted keys
             ->values()
             ->map(fn(Subscription $subscription) => [

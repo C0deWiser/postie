@@ -21,6 +21,29 @@
                         <small class="text-muted">{{ subscription.description }}</small>
                         </p>
 
+                        <div v-if="Postie.showAudienceBadge || Postie.showGroupsBadge" class="mb-1">
+                            <template v-if="Postie.showAudienceBadge">
+                                <span v-for="audience in subscription.audiences"
+                                      :key="audience"
+                                      class="badge badge-primary audience-badge">
+                                    <i class="bi bi-people mr-1"></i>{{ audience }}
+                                </span>
+                                <span v-if="subscription.audiences.length === 0"
+                                      class="badge badge-primary audience-badge">
+                                    <i class="bi bi-people mr-1"></i>{{ $root.$gettext('subscriptions.anyone') }}
+                                </span>
+                            </template>
+
+                            <template v-if="Postie.showGroupsBadge">
+                                <router-link v-for="group in groups(subscription)"
+                                             :key="group.shortcode"
+                                             :to="'/subscriptions?group=' + group.shortcode"
+                                             class="badge badge-secondary audience-badge">
+                                    <i class="bi bi-folder mr-1"></i>{{ group.name }}
+                                </router-link>
+                            </template>
+                        </div>
+
                         <small class="text-muted">{{ subscription.notification }}</small>
                     </td>
                     <td class="text-right table-fit">
@@ -57,6 +80,15 @@ export default {
         },
     },
     methods: {
+        /**
+         * Get subscription groups, skipping the fallback group.
+         *
+         * @param {Object} subscription Notification.
+         * @returns {Object[]} Subscription groups.
+         */
+        groups(subscription) {
+            return subscription.groups.filter(group => !group.fallback);
+        },
         /**
          * Загрузка данных
          */
@@ -104,5 +136,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
+    .audience-badge {
+        font-size: 75%;
+        margin-right: .25rem;
+    }
 </style>

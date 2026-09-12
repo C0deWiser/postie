@@ -44,6 +44,19 @@
         <div class="row mt-4">
             <div class="col-2 sidebar">
                 <ul class="nav flex-column">
+                    @if(! empty($unconfigured))
+                    <li class="nav-item">
+                        <router-link exact-active-class="active" to="/configure" class="nav-link d-flex align-items-center">
+                            <i class="bi bi-sliders mr-2"></i>
+                            <span>@lang('postie::menu.configure')</span>
+                        </router-link>
+                    </li>
+                    @endif
+
+                    <li class="nav-heading">
+                        <h6 class="mt-3 mb-1 small text-uppercase text-muted">@lang('postie::menu.groups')</h6>
+                    </li>
+
                     @foreach($groups as $group)
                     <li class="nav-item">
                         <router-link exact-active-class="active" to="/subscriptions?group={{ $group->getShortcode() }}" class="nav-link d-flex align-items-center">
@@ -52,6 +65,13 @@
                         </router-link>
                     </li>
                     @endforeach
+
+                    <li class="nav-item" v-if="$route.query.group">
+                        <router-link exact-active-class="active" to="/subscriptions" class="nav-link d-flex align-items-center">
+                            <i class="bi bi-view-list mr-2"></i>
+                            <span>@lang('postie::menu.view_all')</span>
+                        </router-link>
+                    </li>
                 </ul>
             </div>
 
