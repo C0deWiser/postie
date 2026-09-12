@@ -64,7 +64,7 @@ export default {
         return false;
       }
 
-      return channel.available || channel.router || channel.previewing;
+      return channel.available || channel.previewing;
     },
     /**
      * Get title.

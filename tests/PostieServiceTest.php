@@ -31,7 +31,7 @@ class PostieServiceTest extends TestCase
         PostieService::$subscriptions = function () {
             return [
                 Subscription::to(ExampleNotification::class)
-                    ->for(fn() => User::query()),
+                    ->for('everyone'),
             ];
         };
     }
@@ -130,5 +130,36 @@ class PostieServiceTest extends TestCase
         $this->postie->toggleUserPreferences($this->user, ExampleNotification::class, ['telegram' => false]);
 
         $this->assertDatabaseCount((new Preference)->getTable(), 0);
+    }
+
+    public function test_unconfigured_channels_returns_channels_with_router_and_no_route(): void
+    {
+        PostieService::$subscriptions = [
+            Subscription::to(ExampleNotification::class)
+                ->via('mail', Channel::via('sms')->router('http://sms.example')),
+        ];
+
+        $this->assertSame(
+            ['sms'],
+            array_column($this->postie->unconfiguredChannels($this->user), 'name')
+        );
+    }
+
+    public function test_unconfigured_channels_skips_configured_and_routerless_channels(): void
+    {
+        PostieService::$subscriptions = [
+            Subscription::to(ExampleNotification::class)
+                ->via(
+                    Channel::via('mail')->router('http://mail.example'),
+                    Channel::via('sms')->router('http://sms.example'),
+                    'telegram',
+                ),
+        ];
+
+        // mail has a route (email is set), sms has no route, telegram has no router.
+        $this->assertSame(
+            ['sms'],
+            array_column($this->postie->unconfiguredChannels($this->user), 'name')
+        );
     }
 }

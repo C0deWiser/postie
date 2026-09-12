@@ -14,4 +14,5 @@ return [
     'unavailableChannel' => 'Channel is unavailable for you',
     'fallbackGroup' => 'Other',
     'router' => 'Enable',
+    'anyone' => 'All users',
 ];

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Codewiser\Postie\Audience;
 use Codewiser\Postie\Channel;
 use Codewiser\Postie\Group;
 use Codewiser\Postie\Subscription;
@@ -43,13 +44,20 @@ class PostieServiceProvider extends PostieApplicationServiceProvider
     }
 
     /**
-     * Return an array of NotificationDefinition.
+     * Return an array of Audience definitions.
      *
-     * You may pass a notification class name as is:
-     *
-     *     'App\Notifications\MyNotification',
-     *
-     * or a fully defined Subscription (as below).
+     * @return array
+     */
+    public function audiences(): array
+    {
+        return [
+            Audience::make('admins', 'Administration')
+                ->for(fn() => User::query()->where('role', 'admin'))
+        ];
+    }
+
+    /**
+     * Return an array of Subscription definitions.
      *
      * @return array
      */
@@ -59,7 +67,7 @@ class PostieServiceProvider extends PostieApplicationServiceProvider
             Subscription::to('App\Notifications\MyNotification')
                 ->title('Digest')
                 ->group('Group')
-                ->for(fn() => User::query())
+                ->for('admins')
                 ->via([
                     'mail',
                     'telegram'

@@ -58,95 +58,23 @@ Publish Postie translations to override them:
 After installing Postie, its service provider will be
 located at `App\Providers\PostieServiceProvider`.
 
-First, provide information about every `Notification` that users may manage.
-Every subscription requires a list of available channels
-and a possible notifiables (as a callable).
+**First**, provide information about every `Notification` that users may manage.
+Every subscription requires a list of available channels and an audience.
+Audience — is a User Builder. If current user is not in notification 
+audience, he or she can not manage subscription to the notification.
+If an audience is not set, it means that every user may manage such
+notification.
 
-```php
-use Codewiser\Postie\Subscription;
-use Codewiser\Postie\PostieApplicationServiceProvider;
-
-class PostieServiceProvider extends PostieApplicationServiceProvider
-{
-    public function notifications(): array
-    {
-        return [
-            // A notification class name is enough to register a subscription.
-            NewOrderNotification::class,
-
-            // Or configure the subscription explicitly.
-            Subscription::to(NewOrderNotification::class)
-                ->via('mail', 'database')
-                ->for(fn() => User::query()->where('role', 'sales-manager')),
-        ];
-    }
-}
-```
-
-Instead of listing every subscription, Postie can discover them automatically:
+Postie can discover notifications automatically:
 any notification class in the `app/Notifications` directory that applies the
-`Channel` attribute is registered on its own. Its other attributes
-(`Subject`, `Description`, `Group`, `Preview`) are still respected.
-Explicitly defined subscriptions take precedence and are never duplicated.
+`Channel(s)` or `Group(s)` attribute is registered on its own.
 
 To use a different directory, publish the `postie` config and set the
 `notifications_path` option to an array of directories.
 
-Second, replace the `Notification::via()` method with the
+**Second**, replace the `Notification::via()` method with the
 `\Codewiser\Postie\Notifications\Traits\Channelization` trait.
 The `Notification` will use the delivery channels the user preferred.
-
-```php
-namespace App\Notifications;
-
-use Illuminate\Notifications\Notification;
-use Codewiser\Postie\Notifications\Traits\Channelization;
-
-class NewOrderNotification extends Notification
-{
-    use Channelization;
-
-    public function __construct(public Order $order)
-    {
-        //
-    }
-
-    public function toMail($notifiable)
-    {
-        return (new MailMessage)
-            ->subject("New order")
-            ->line('User makes new order.');
-    }
-
-    public function toArray($notifiable)
-    {
-        //
-    }
-}
-```
-
-> This is a minimal setup. All of the following is mostly about making
-> the Web panel beautiful.
-
-### Subscription Object
-
-`Subscription` is an object that helps Postie understand the application
-notifications.
-
-Initially, it is enough to pass the notification class name,
-a query builder with users who may receive such a notification,
-and a list of channels supported by the notification.
-
-```php
-use Codewiser\Postie\Subscription;
-
-Subscription::to(DailyNewsNotification::class)
-    ->via('mail')
-    ->for(fn() => User::query());
-```
-
-Moreover, you may define a notification title, description, supported channels,
-and other properties.
 
 ```php
 namespace App\Notifications;
@@ -166,21 +94,33 @@ class DailyNewsNotification extends Notification
 }
 ```
 
-> Class-level attributes (`Subject`, `Description`, `Channel`, `Group`)
-> are not inherited from a parent class: apply them to each Notification
-> that must use them.
+> Class-level attributes are not inherited from a parent class: apply them 
+> to each Notification that must use them.
 
-If you need translatable title/description, you should pass values directly
-to the `Subscription` object.
+If you don't like php attributes, or if you need translatable 
+title/description — define subscriptions in `PostieServiceProvider` explicitly. 
+You may combine both approaches: notification attributes are prior.
 
 ```php
 use Codewiser\Postie\Subscription;
+use Codewiser\Postie\PostieApplicationServiceProvider;
 
-Subscription::to(DailyNewsNotification::class)
-    ->for(fn() => User::query())
-    ->title(__('Daily News Notification'))
-    ->description(__('Sends most interesting news digest'));
+class PostieServiceProvider extends PostieApplicationServiceProvider
+{
+    public function notifications(): array
+    {
+        return [
+            Subscription::to(DailyNewsNotification::class)
+                ->via('mail')
+                ->title(__('Daily News Notification'))
+                ->description(__('Sends most interesting news digest')),
+        ];
+    }
+}
 ```
+
+> This is a minimal setup. All of the following is mostly about making
+> the Web panel beautiful.
 
 ### Channel Object
 
@@ -240,6 +180,19 @@ class DailyNewsNotification extends Notification
 }
 ```
 
+You may apply the same properties to a few channels at once using the
+`Channels` attribute:
+
+```php
+use Codewiser\Postie\Attributes\Channels;
+
+#[Channels(['mail', 'telegram'], default: false)]
+class DailyNewsNotification extends Notification
+{
+    use Channelization;
+}
+```
+
 If you want to disable the user's ability to manage channel preferences, you
 may hide the channel from the user interface, or just force the channel state.
 
@@ -265,17 +218,17 @@ You may group subscriptions to create a side menu for the dashboard.
 The easiest approach is to describe all groups in the Service Provider.
 Here you set up group default properties (icon, weight, channels, audience).
 Later a subscription may reference a group by its name and inherit these
-properties, just like channels.
+properties.
 
 ```php
+use Codewiser\Postie\Audience;
 use Codewiser\Postie\Group;
 
 public function groups(): array
 {
     return [
         Group::make('My group', icon: 'broadcast')
-            ->via('mail', 'database')
-            ->for(fn() => User::query()),
+            ->via('mail', 'database'),
     ];
 }
 ```
@@ -303,7 +256,6 @@ public function notifications(): array
         // Define group and assign a few subscriptions to it.
         Group::make('My group', icon: 'broadcast')
             ->via('mail', 'database')
-            ->for(fn() => User::query())
             ->add(DailyNewsNotification::class)
             ->add(Subscription::to(NewOrderNotification::class)),
 
@@ -313,7 +265,7 @@ public function notifications(): array
 }
 ```
 
-> If a Subscription defines its own channels and notifiables — it will not 
+> If a Subscription defines its own channels and audience — it will not 
 > inherit these properties from a group!
 
 Also, you may assign a subscription to a group using the attribute, applied 
@@ -333,10 +285,85 @@ class DailyNewsNotification extends Notification
 }
 ```
 
+To assign a notification to a few groups at once, use the `Groups` attribute:
+
+```php
+use Codewiser\Postie\Attributes\Groups;
+
+#[Groups(['Daily', 'Weekly'])]
+class DailyNewsNotification extends Notification
+{
+    use Channelization;
+}
+```
+
 Subscriptions that are not assigned to any group fall into a special
 **fallback group** (named "Other" by default, translatable).
 
 > A Subscription may be assigned to a few groups.
+
+### Audience
+
+Predefine possible notifiables (audience) in the service provider.
+Each audience has a name (a `BackedEnum` is supported), a title
+and a callback, returning a Builder of possible notifiables.
+
+```php
+use Codewiser\Postie\Audience;
+
+public function audiences(): array
+{
+    return [
+        Audience::make('managers', 'Managers')->for(
+            fn() => User::query()->where('role', 'manager')
+        ),
+    ];
+}
+```
+
+A notification may be scoped to an audience using the `Audience` attribute.
+The subscription adopts the builder of the predefined audience, referenced
+by its name.
+
+```php
+namespace App\Notifications;
+
+use Codewiser\Postie\Attributes\Audience;
+use Illuminate\Notifications\Notification;
+use Codewiser\Postie\Notifications\Traits\Channelization;
+
+#[Audience('managers')]
+class ManagersDigestNotification extends Notification
+{
+    use Channelization;
+}
+```
+
+A `Subscription` or a `Group` may also reference a predefined audience by its
+name, or accept an `Audience` object, in the `for()` method:
+
+```php
+use Codewiser\Postie\Audience;
+
+public function notifications(): array
+{
+    return [
+        // Reference a predefined audience by name.
+        Subscription::to(DigestNotification::class)->for('managers'),
+
+        // Or use an audience object.
+        Subscription::to(ReportNotification::class)->for(
+            Audience::make('managers', 'Managers')->for(
+                fn() => User::query()->where('role', 'manager')
+            )
+        ),
+    ];
+}
+```
+
+When a subscription defines its own audience, that audience wins: group 
+audiences are ignored. Otherwise, when the audience comes from groups, the 
+notifiable must belong to every group audience.
 
 ### Previewing Notifications
 

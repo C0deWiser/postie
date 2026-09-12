@@ -2,10 +2,12 @@
 
 namespace Codewiser\Postie\Tests\App;
 
+use Codewiser\Postie\Audience;
 use Codewiser\Postie\Channel;
 use Codewiser\Postie\Group;
 use Codewiser\Postie\PostieApplicationServiceProvider;
 use Codewiser\Postie\Subscription;
+use Codewiser\Postie\Tests\Fixtures\Audiences;
 use Codewiser\Postie\Tests\Fixtures\GroupedNotification;
 use Codewiser\Postie\Tests\Fixtures\PlainNotification;
 use Codewiser\Postie\Tests\Fixtures\ExampleNotification;
@@ -28,6 +30,16 @@ class PostieServiceProvider extends PostieApplicationServiceProvider
                 ->icon('broadcast')
                 ->weight(3)
                 ->via(['mail'])
+                ->for('everyone'),
+        ];
+    }
+
+    public function audiences(): array
+    {
+        return [
+            Audience::make('everyone', 'Everyone')
+                ->for(fn() => \Codewiser\Postie\Tests\Models\User::query()),
+            Audience::make(Audiences::Customers, 'Customers')
                 ->for(fn() => \Codewiser\Postie\Tests\Models\User::query()),
         ];
     }

@@ -16,15 +16,13 @@ use function app;
 #[\Attribute(\Attribute::TARGET_CLASS | \Attribute::IS_REPEATABLE)]
 class Channel
 {
-    public string $name;
-
     public function __construct(
-        string|\BackedEnum $name,
+        public string $name,
         public ?bool $default = null,
         public ?bool $forced = null,
         public ?bool $hidden = null
     ) {
-        $this->name = $name instanceof \BackedEnum ? (string) $name->value : $name;
+        //
     }
 
     public function toChannel(): ChannelDefinition

@@ -2,9 +2,12 @@
 
 namespace Codewiser\Postie;
 
+use Codewiser\Postie\Attributes\Audience as AudienceAttribute;
 use Codewiser\Postie\Attributes\Channel as ChannelAttribute;
+use Codewiser\Postie\Attributes\Channels as ChannelsAttribute;
 use Codewiser\Postie\Attributes\Description;
 use Codewiser\Postie\Attributes\Group as GroupAttribute;
+use Codewiser\Postie\Attributes\Groups as GroupsAttribute;
 use Codewiser\Postie\Attributes\Preview;
 use Codewiser\Postie\Attributes\Subject;
 use Codewiser\Postie\Collections\Groups;
@@ -32,6 +35,10 @@ class Subscription implements Arrayable
      * @var array<int, Group>
      */
     protected array $groups = [];
+    /**
+     * Is the subscription auto-discovered via notification attributes?
+     */
+    protected bool $discovered = false;
 
     /**
      * Make subscription definition using notification class name.
@@ -66,25 +73,25 @@ class Subscription implements Arrayable
         }
 
         // Channels
-        $channels = $reflection->getAttributes(ChannelAttribute::class);
+        foreach ($reflection->getAttributes(ChannelAttribute::class) as $attribute) {
+            $this->channels[] = $attribute->newInstance()->toChannel();
+        }
 
-        if ($channels) {
-            $this->channels = array_map(
-                fn(\ReflectionAttribute $attribute) => $attribute->newInstance()->toChannel(),
-                $channels
-            );
+        foreach ($reflection->getAttributes(ChannelsAttribute::class) as $attribute) {
+            foreach ($attribute->newInstance()->toChannels() as $channel) {
+                $this->channels[] = $channel;
+            }
         }
 
         // Groups
-        $groups = $reflection->getAttributes(GroupAttribute::class);
+        foreach ($reflection->getAttributes(GroupAttribute::class) as $attribute) {
+            $this->attachGroup($this->resolveGroup($attribute->newInstance()->name));
+        }
 
-        if ($groups) {
-            $this->groups = array_map(
-                fn(\ReflectionAttribute $attribute) => $this->attachGroup(
-                    $this->resolveGroup($attribute->newInstance()->name)
-                ),
-                $groups
-            );
+        foreach ($reflection->getAttributes(GroupsAttribute::class) as $attribute) {
+            foreach ($attribute->newInstance()->names as $name) {
+                $this->attachGroup($this->resolveGroup($name));
+            }
         }
 
         // Preview
@@ -93,6 +100,17 @@ class Subscription implements Arrayable
                 $this->previewMethod = $method->getName();
 
                 break;
+            }
+        }
+
+        // Audience
+        $attribute = $reflection->getAttributes(AudienceAttribute::class);
+
+        if ($attribute) {
+            $audience = $attribute[0]->newInstance()->toAudience();
+
+            if ($audience->hasBuilder()) {
+                $this->for($audience);
             }
         }
     }
@@ -124,8 +142,10 @@ class Subscription implements Arrayable
             $this->via($group->getChannels()->all());
         }
 
-        if (! $this->hasAudience() && $group->hasAudience()) {
-            $this->for($group->getAudienceCallback());
+        if (! $this->isOwnAudience()
+            && ! $this->getAudience()
+            && ($group->getAudience()?->hasBuilder() ?? false)) {
+            $this->inheritAudience($group->getAudience());
         }
 
         $this->groups[] = $group;
@@ -186,6 +206,24 @@ class Subscription implements Arrayable
     }
 
     /**
+     * Mark subscription as auto-discovered via notification attributes.
+     */
+    public function discovered(bool $discovered = true): static
+    {
+        $this->discovered = $discovered;
+
+        return $this;
+    }
+
+    /**
+     * Is the subscription auto-discovered via notification attributes?
+     */
+    public function isDiscovered(): bool
+    {
+        return $this->discovered;
+    }
+
+    /**
      * Get notification class name.
      *
      * @return class-string<Notification>
@@ -233,6 +271,31 @@ class Subscription implements Arrayable
         return is_callable($preview) ? call_user_func($preview, $channel, $notifiable) : null;
     }
 
+    /**
+     * Get titles of audiences the subscription is scoped to.
+     *
+     * An own audience (set via `for()`) overrides and hides group audiences.
+     * Otherwise, audiences of every attached group are listed.
+     *
+     * @return array<int, string>
+     */
+    public function getAudienceTitles(): array
+    {
+        if ($this->isOwnAudience()) {
+            return $this->getAudience() ? [$this->getAudience()->getTitle()] : [];
+        }
+
+        $titles = [];
+
+        foreach ($this->getGroups() as $group) {
+            if ($group->getAudience()) {
+                $titles[$group->getAudience()->getName()] ??= $group->getAudience()->getTitle();
+            }
+        }
+
+        return array_values($titles);
+    }
+
     public function toArray(): array
     {
         return [
@@ -240,6 +303,7 @@ class Subscription implements Arrayable
             'notification' => $this->getNotification(),
             'title'        => $this->getTitle(),
             'description'  => $this->getDescription(),
+            'audiences'    => $this->getAudienceTitles(),
             'channels'     => $this->getChannels()->toArray(),
             //'preview'      => $this->hasPreview(),
         ];

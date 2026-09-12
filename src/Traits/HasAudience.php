@@ -2,56 +2,60 @@
 
 namespace Codewiser\Postie\Traits;
 
+use Codewiser\Postie\Audience;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Notifications\Notifiable;
 
 trait HasAudience
 {
+    protected ?Audience $audience = null;
+
     /**
-     * @var null|callable
+     * Whether the audience was set explicitly (via `for()`),
+     * rather than inherited from a group.
      */
-    protected $audience = null;
+    protected bool $audienceIsOwn = false;
 
     /**
      * Define notification possible audience.
      *
-     * @param callable(mixed): Builder<Notifiable> $audience
+     * Accepts a predefined Audience by its name, or a new Audience object.
+     *
+     * @param  Audience|string|\BackedEnum  $audience
      */
-    public function for(callable $audience): static
+    public function for(Audience|string|\BackedEnum $audience): static
     {
-        $this->audience = $audience;
+        $this->audience = $audience instanceof Audience
+            ? $audience
+            : $this->getService()->findAudience($audience);
+
+        $this->audienceIsOwn = true;
 
         return $this;
     }
 
     /**
-     * @deprecated use for()
+     * Get audience definition.
      */
-    public function audience(callable $audienceBuilder): static
-    {
-        return $this->for($audienceBuilder);
-    }
-
-    /**
-     * Get Builder that holds notification audience.
-     */
-    public function getAudience(): ?Builder
-    {
-        return is_callable($this->audience) ? call_user_func($this->audience) : null;
-    }
-
-    /**
-     * Get raw audience callable.
-     *
-     * @return null|callable(mixed): Builder<Notifiable>
-     */
-    public function getAudienceCallback(): ?callable
+    public function getAudience(): ?Audience
     {
         return $this->audience;
     }
 
-    public function hasAudience(): bool
+    /**
+     * Whether the audience is owned explicitly (via `for()`),
+     * rather than inherited from a group.
+     */
+    public function isOwnAudience(): bool
     {
-        return is_callable($this->audience);
+        return $this->audienceIsOwn;
+    }
+
+    /**
+     * Set an audience inherited from a group.
+     */
+    public function inheritAudience(Audience $audience): void
+    {
+        $this->audience = $audience;
     }
 }

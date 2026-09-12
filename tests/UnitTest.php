@@ -2,6 +2,7 @@
 
 namespace Codewiser\Postie\Tests;
 
+use Codewiser\Postie\Audience;
 use Codewiser\Postie\Channel;
 use Codewiser\Postie\Group;
 use Codewiser\Postie\PostieService;
@@ -173,38 +174,39 @@ class UnitTest extends TestCase
 
     public function test_group_add_inherits_audience_to_subscription_without_one(): void
     {
-        $group = Group::make('Group')->for(fn() => User::query());
+        $group = Group::make('Group')->for('everyone');
         $subscription = Subscription::to(ExampleNotification::class);
 
         $group->add($subscription);
 
-        $this->assertTrue($subscription->hasAudience());
+        $this->assertTrue($subscription->getAudience()->hasBuilder());
     }
 
     public function test_group_add_accepts_notification_class_name(): void
     {
-        $group = Group::make('Group')->via('mail')->for(fn() => User::query());
+        $group = Group::make('Group')->via('mail')->for('everyone');
 
         $group->add(GroupedNotification::class);
 
         $subscription = $group->getSubscriptions()[0];
 
         $this->assertSame(GroupedNotification::class, $subscription->getNotification());
-        $this->assertTrue($subscription->hasAudience());
+        $this->assertTrue($subscription->getAudience()->hasBuilder());
         $this->assertSame(['mail'], $subscription->getChannels()->names());
     }
 
     public function test_group_add_keeps_subscription_audience_if_present(): void
     {
-        $group = Group::make('Group')->for(fn() => User::query());
+        $group = Group::make('Group')->for('everyone');
         $subscription = Subscription::to(ExampleNotification::class)
-            ->for(fn() => User::query()->whereNull('email'));
+            ->for(Audience::make('no-email', 'No E-mail')
+                ->for(fn() => User::query()->whereNull('email')));
 
         $group->add($subscription);
 
         $this->assertSame(
             'select * from "users" where "email" is null',
-            $subscription->getAudience()->toSql()
+            $subscription->getAudience()->getBuilder()->toSql()
         );
     }
 
@@ -245,8 +247,15 @@ class UnitTest extends TestCase
 
     public function test_postie_service_script_variables(): void
     {
+        config([
+            'postie.dashboard.badges.audience' => false,
+            'postie.dashboard.badges.groups'   => false,
+        ]);
+
         $this->assertSame([
-            'path' => config('postie.path'),
+            'path'              => config('postie.path'),
+            'showAudienceBadge' => false,
+            'showGroupsBadge'   => false,
         ], app(PostieService::class)->scriptVariables());
     }
 }

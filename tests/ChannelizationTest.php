@@ -23,7 +23,7 @@ class ChannelizationTest extends TestCase
 
         PostieService::$subscriptions = [
             Subscription::to(ExampleNotification::class)
-                ->for(fn() => User::query()),
+                ->for('everyone'),
         ];
     }
 

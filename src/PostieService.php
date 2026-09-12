@@ -2,6 +2,7 @@
 
 namespace Codewiser\Postie;
 
+use Codewiser\Postie\Collections\Audiences;
 use Codewiser\Postie\Collections\Channels;
 use Codewiser\Postie\Collections\Groups;
 use Codewiser\Postie\Collections\Subscriptions;
@@ -48,6 +49,15 @@ class PostieService
     public static $groups = [];
 
     /**
+     * Default audience definitions, keyed by audience name.
+     *
+     * May be a callable, resolved lazily at first use.
+     *
+     * @var array<string, Audience>|callable
+     */
+    public static $audiences = [];
+
+    /**
      * Get materialized default channels, keyed by channel name.
      *
      * Lazy callable is evaluated once and cached.
@@ -81,8 +91,48 @@ class PostieService
     public function scriptVariables(): array
     {
         return [
-            'path' => config('postie.path'),
+            'path'             => config('postie.path'),
+            'showAudienceBadge' => (bool) config('postie.dashboard.badges.audience', true),
+            'showGroupsBadge'   => (bool) config('postie.dashboard.badges.groups', true),
         ];
+    }
+
+    /**
+     * Get materialized default audiences, keyed by audience name.
+     *
+     * Lazy callable is evaluated once and cached.
+     */
+    public function getAudiences(): Audiences
+    {
+        if (is_callable(self::$audiences)) {
+            $definitions = [];
+
+            foreach (call_user_func(self::$audiences) as $audience) {
+                $definitions[$audience->getName()] = $audience;
+            }
+
+            self::$audiences = $definitions;
+        }
+
+        return new Audiences(array_values(self::$audiences));
+    }
+
+    /**
+     * Resolve predefined audience by its name.
+     *
+     * @throws \RuntimeException When the audience is not defined.
+     */
+    public function findAudience(string|\BackedEnum $audience): Audience
+    {
+        if ($audience instanceof \BackedEnum) {
+            $audience = (string) $audience->value;
+        }
+
+        if (! $predefined = $this->getAudiences()->find($audience)) {
+            throw new \RuntimeException("Audience [{$audience}] is not defined.");
+        }
+
+        return $predefined;
     }
 
     /**
@@ -119,11 +169,45 @@ class PostieService
             }
         }
 
-        return $notifiable
-            ? $this->getSubscriptions($notifiable)
-                ->groups()
-                ->orderedBy(array_values(self::$groups))
-            : new Groups(array_values(self::$groups));
+        // Remember order of appearance to order weightless groups.
+        $position = 0;
+
+        foreach (self::$groups as $group) {
+            $group->position($position++);
+        }
+
+        if (! $notifiable) {
+            return new Groups(array_values(self::$groups));
+        }
+
+        return $this->getSubscriptions($notifiable)
+            ->groups()
+            ->orderedBy(array_values(self::$groups));
+    }
+
+    /**
+     * Get user channels that require additional setup.
+     *
+     * Channels having a router and no route for the given notifiable.
+     *
+     * @return array<int, array>
+     */
+    public function unconfiguredChannels(Model $notifiable): array
+    {
+        $channels = new Channels();
+
+        foreach ($this->getSubscriptions($notifiable) as $subscription) {
+            $channels = $channels->merge($subscription->getChannels());
+        }
+
+        return $channels
+            ->unique(fn(Channel $channel) => $channel->getName())
+            ->filter(fn(Channel $channel) => $channel->getRouter() !== null)
+            ->filter(fn(Channel $channel) => $channel->getName() == 'broadcast'
+                || ! $notifiable->routeNotificationFor($channel->getName())
+            )
+            ->values()
+            ->toArray();
     }
 
     /**
@@ -222,7 +306,7 @@ class PostieService
         try {
             $definition = $this->getSubscriptions()->find(get_class($notification));
 
-            if ($builder = $definition->getAudience()) {
+            if ($builder = $definition->getAudience()?->getBuilder()) {
                 $audience = is_callable($callback)
                     // Modify predefined audience builder with a callback
                     ? call_user_func($callback, $builder, $notification)
