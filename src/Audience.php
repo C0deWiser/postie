@@ -7,10 +7,11 @@ use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
+use Illuminate\Support\Traits\Conditionable;
 
 class Audience implements Arrayable
 {
-    use HasTitle;
+    use HasTitle, Conditionable;
 
     /**
      * @var null|callable(mixed): Builder<Notifiable>
@@ -55,7 +56,7 @@ class Audience implements Arrayable
      *
      * @param  callable(mixed): Builder<Notifiable>  $builder
      */
-    public function for(callable $builder): static
+    public function with(callable $builder): static
     {
         $this->builder = $builder;
 

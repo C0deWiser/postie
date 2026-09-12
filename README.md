@@ -313,7 +313,7 @@ use Codewiser\Postie\Audience;
 public function audiences(): array
 {
     return [
-        Audience::make('managers', 'Managers')->for(
+        Audience::make('managers', 'Managers')->with(
             fn() => User::query()->where('role', 'manager')
         ),
     ];
@@ -352,7 +352,7 @@ public function notifications(): array
 
         // Or use an audience object.
         Subscription::to(ReportNotification::class)->for(
-            Audience::make('managers', 'Managers')->for(
+            Audience::make('managers', 'Managers')->with(
                 fn() => User::query()->where('role', 'manager')
             )
         ),

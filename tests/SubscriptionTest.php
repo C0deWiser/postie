@@ -152,7 +152,7 @@ class SubscriptionTest extends TestCase
             ->icon('bell')
             ->weight(5)
             ->for(Audience::make('preferences', 'Preferences')
-                ->for(fn() => \Codewiser\Postie\Models\Preference::query()));
+                ->with(fn() => \Codewiser\Postie\Models\Preference::query()));
 
         $subscriptions = new Subscriptions([
             Subscription::to(PlainNotification::class)->group('Same Name'),
@@ -346,7 +346,7 @@ class SubscriptionTest extends TestCase
     public function test_subscription_keeps_own_audience_when_referencing_predefined_group(): void
     {
         $own = Audience::make('none', 'None')
-            ->for(fn() => \Codewiser\Postie\Tests\Models\User::query()->whereKey(-1));
+            ->with(fn() => \Codewiser\Postie\Tests\Models\User::query()->whereKey(-1));
 
         $subscription = Subscription::to(ExampleNotification::class)
             ->for($own)
@@ -360,10 +360,10 @@ class SubscriptionTest extends TestCase
     {
         $subscription = Subscription::to(ExampleNotification::class)
             ->group(Group::make('Managerial')->for(
-                Audience::make('managers', 'Managers')->for(fn() => User::query())
+                Audience::make('managers', 'Managers')->with(fn() => User::query())
             ))
             ->group(Group::make('VIP')->for(
-                Audience::make('vips', 'VIPs')->for(fn() => User::query())
+                Audience::make('vips', 'VIPs')->with(fn() => User::query())
             ));
 
         $this->assertSame(
@@ -389,9 +389,9 @@ class SubscriptionTest extends TestCase
         ]);
 
         $subscription = Subscription::to(ExampleNotification::class)
-            ->for(Audience::make('own', 'Own')->for(fn() => User::query()->whereKey($ownUser->getKey())))
+            ->for(Audience::make('own', 'Own')->with(fn() => User::query()->whereKey($ownUser->getKey())))
             ->group(Group::make('Other')->for(
-                Audience::make('others', 'Others')->for(fn() => User::query()->whereKey($otherUser->getKey()))
+                Audience::make('others', 'Others')->with(fn() => User::query()->whereKey($otherUser->getKey()))
             ));
 
         $subscriptions = new Subscriptions([$subscription]);

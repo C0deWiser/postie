@@ -52,7 +52,7 @@ class PostieServiceProvider extends PostieApplicationServiceProvider
     {
         return [
             Audience::make('admins', 'Administration')
-                ->for(fn() => User::query()->where('role', 'admin'))
+                ->with(fn() => User::query()->where('role', 'admin'))
         ];
     }
 

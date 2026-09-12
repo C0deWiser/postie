@@ -200,7 +200,7 @@ class UnitTest extends TestCase
         $group = Group::make('Group')->for('everyone');
         $subscription = Subscription::to(ExampleNotification::class)
             ->for(Audience::make('no-email', 'No E-mail')
-                ->for(fn() => User::query()->whereNull('email')));
+                ->with(fn() => User::query()->whereNull('email')));
 
         $group->add($subscription);
 

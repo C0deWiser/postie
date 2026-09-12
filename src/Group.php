@@ -8,10 +8,11 @@ use Codewiser\Postie\Traits\HasTitle;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
+use Illuminate\Support\Traits\Conditionable;
 
 class Group implements Arrayable
 {
-    use HasChannels, HasAudience, HasTitle;
+    use HasChannels, HasAudience, HasTitle, Conditionable;
 
     protected array $subscriptions = [];
     protected bool $fallback = false;

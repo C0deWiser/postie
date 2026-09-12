@@ -42,6 +42,30 @@ class Channels extends Collection
     }
 
     /**
+     * Order channels by predefined channel definitions.
+     *
+     * Channels are placed according to the order of the given definitions list.
+     * Channels not found in the definitions keep their relative order and go last.
+     *
+     * @param  array<int, Channel>  $predefined
+     */
+    public function orderedBy(array $predefined): static
+    {
+        $names = array_map(
+            fn(Channel $channel) => $channel->getName(),
+            array_values($predefined)
+        );
+
+        $position = fn(Channel $channel) => ($offset = array_search($channel->getName(), $names, true)) === false
+            ? PHP_INT_MAX
+            : $offset;
+
+        return $this->sort(
+            fn(Channel $a, Channel $b) => $position($a) <=> $position($b)
+        )->values();
+    }
+
+    /**
      * Get channels respecting notifiable preferences and routes availability.
      *
      * @return array<int, array>

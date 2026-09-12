@@ -92,7 +92,7 @@ class CollectionsTest extends TestCase
 
         $subscriptions = new Subscriptions([
             Subscription::to(ExampleNotification::class)->for(
-                Audience::make('john', 'John')->for(
+                Audience::make('john', 'John')->with(
                     fn() => User::query()->whereKey($this->user->getKey())
                 )
             ),
@@ -130,12 +130,12 @@ class CollectionsTest extends TestCase
         $subscriptions = new Subscriptions([
             Subscription::to(ExampleNotification::class)
                 ->group(Group::make('Managerial')->for(
-                    Audience::make('managers', 'Managers')->for(
+                    Audience::make('managers', 'Managers')->with(
                         fn() => User::query()->whereKey([$regular->getKey(), $vip->getKey()])
                     )
                 ))
                 ->group(Group::make('VIP')->for(
-                    Audience::make('vips', 'VIPs')->for(
+                    Audience::make('vips', 'VIPs')->with(
                         fn() => User::query()->whereKey($vip->getKey())
                     )
                 )),
@@ -251,6 +251,20 @@ class CollectionsTest extends TestCase
 
         $channels = $result[0]['channels'];
         $this->assertFalse(collect($channels)->firstWhere('name', 'mail')['available']);
+    }
+
+    public function test_with_notifiable_orders_channels_by_predefined_definitions(): void
+    {
+        // Predefined channels are declared as: mail, telegram.
+        $subscription = Subscription::to(ExampleNotification::class)
+            ->via(['telegram', 'mail']);
+
+        $result = (new Subscriptions([$subscription]))->withNotifiable($this->user);
+
+        $this->assertSame(
+            ['mail', 'telegram'],
+            array_column($result[0]['channels'], 'name')
+        );
     }
 
     public function test_with_notifiable_sorts_fallback_groups_to_bottom(): void
@@ -422,6 +436,40 @@ class CollectionsTest extends TestCase
             'mail'     => false,
             'telegram' => true,
         ], $channels->getPreferences(['mail' => false, 'telegram' => true]));
+    }
+
+    public function test_channels_follow_predefined_order(): void
+    {
+        $defaults = app(PostieService::class)->getChannels();
+
+        $channels = (new Channels([
+            Channel::via('telegram'),
+            Channel::via('mail'),
+        ]))->orderedBy($defaults->all());
+
+        $this->assertSame(
+            ['mail', 'telegram'],
+            $channels->names()
+        );
+    }
+
+    public function test_channels_keep_relative_order_when_not_predefined(): void
+    {
+        $defaults = app(PostieService::class)->getChannels();
+
+        $channels = (new Channels([
+            Channel::via('unknown'),
+            Channel::via('telegram'),
+            Channel::via('mail'),
+            Channel::via('another'),
+        ]))->orderedBy($defaults->all());
+
+        // Predefined channels go first in their declaration order,
+        // unknown channels keep relative order at the end.
+        $this->assertSame(
+            ['mail', 'telegram', 'unknown', 'another'],
+            $channels->names()
+        );
     }
 
     public function test_groups_filter_by_shortcode(): void

@@ -5,6 +5,7 @@ namespace Codewiser\Postie\Collections;
 use Codewiser\Postie\Audience;
 use Codewiser\Postie\Group;
 use Codewiser\Postie\Models\Preference;
+use Codewiser\Postie\PostieService;
 use Codewiser\Postie\Subscription;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notification;
@@ -158,6 +159,10 @@ class Subscriptions extends Collection
 
                 // Add channels respecting user preferences and routes
                 'channels' => $subscription->getChannels()
+                    // Order channels by default channel definitions.
+                    ->orderedBy(
+                        app(PostieService::class)->getChannels()->all()
+                    )
                     ->withNotifiable($notifiable, $subscription,
                         $preferences->ofNotification($subscription->getNotification())
                     ),

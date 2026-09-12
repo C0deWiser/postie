@@ -5,10 +5,11 @@ namespace Codewiser\Postie;
 use Codewiser\Postie\Traits\HasTitle;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Str;
+use Illuminate\Support\Traits\Conditionable;
 
 class Channel implements Arrayable
 {
-    use HasTitle;
+    use HasTitle, Conditionable;
 
     protected string $icon;
     protected ?string $subtitle = null;

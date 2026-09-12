@@ -38,9 +38,9 @@ class PostieServiceProvider extends PostieApplicationServiceProvider
     {
         return [
             Audience::make('everyone', 'Everyone')
-                ->for(fn() => \Codewiser\Postie\Tests\Models\User::query()),
+                ->with(fn() => \Codewiser\Postie\Tests\Models\User::query()),
             Audience::make(Audiences::Customers, 'Customers')
-                ->for(fn() => \Codewiser\Postie\Tests\Models\User::query()),
+                ->with(fn() => \Codewiser\Postie\Tests\Models\User::query()),
         ];
     }
 
