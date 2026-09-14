@@ -1,0 +1,454 @@
+openapi: 3.0.3
+
+info:
+  title: Postie API
+  description: |
+    Read models for a custom dashboard: channel, group, audience and notifications
+    definitions, and user channel preferences.
+
+    The API is **opt-in** — routes are only available when you load
+    `routes/api.php` from your own routes file (see `PostieServiceProvider`).
+  version: '1.0.0'
+
+servers:
+  - url: '/postie'
+    description: Default `postie.path`, changeable via `POSTIE_PATH`.
+
+tags:
+  - name: channels
+    description: Channel definitions.
+  - name: groups
+    description: Subscription groups.
+  - name: audiences
+    description: Audience definitions.
+  - name: notifications
+    description: Subscription definitions and user preferences.
+
+paths:
+  /api/channels:
+    get:
+      tags: [channels]
+      summary: List all defined channels
+      operationId: channelsIndex
+      responses:
+        '200':
+          description: Channel definitions.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Channel'
+
+  /api/channels/{channel}:
+    get:
+      tags: [channels]
+      summary: Get a single channel definition
+      operationId: channelsShow
+      parameters:
+        - name: channel
+          in: path
+          required: true
+          description: Channel name (mail, telegram, sms, ...).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Channel definition.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Channel'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/groups:
+    get:
+      tags: [groups]
+      summary: List groups of subscriptions for the current user
+      operationId: groupsIndex
+      responses:
+        '200':
+          description: Groups, ordered by weight.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Group'
+
+  /api/groups/{group}:
+    get:
+      tags: [groups]
+      summary: Get a group by its shortcode
+      operationId: groupsShow
+      parameters:
+        - name: group
+          in: path
+          required: true
+          description: Group shortcode.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Group definition.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Group'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/audiences:
+    get:
+      tags: [audiences]
+      summary: List all defined audiences
+      operationId: audiencesIndex
+      responses:
+        '200':
+          description: Audience definitions.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Audience'
+
+  /api/audiences/{audience}:
+    get:
+      tags: [audiences]
+      summary: Get an audience by its name
+      operationId: audiencesShow
+      parameters:
+        - name: audience
+          in: path
+          required: true
+          description: Audience name (everyone, admins, Customers, ...).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Audience definition.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Audience'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/notifications:
+    get:
+      tags: [notifications]
+      summary: List all subscriptions for the current user
+      description: Returns subscriptions the current user belongs to, with per-channel status and availability. When a `group` shortcode is provided, only subscriptions matching that group are returned.
+      operationId: notificationsIndex
+      parameters:
+        - name: group
+          in: query
+          required: false
+          description: Group shortcode to filter subscriptions by.
+          schema:
+            type: string
+            example: e7b1
+      responses:
+        '200':
+          description: Subscriptions with channels.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Subscription'
+
+  /api/notifications/{notification}:
+    get:
+      tags: [notifications]
+      summary: Get a single subscription for the current user
+      description: |
+        The notification parameter is a fully-qualified class name.
+        Backslashes must be URL-encoded (`\` becomes `%5C`), e.g.
+        `App%5CNotifications%5CMyNotification`.
+      operationId: notificationsShow
+      parameters:
+        - name: notification
+          in: path
+          required: true
+          description: Notification class name.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Subscription with channels.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Subscription'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/notifications/{notification}/channels/{channel}:
+    put:
+      tags: [notifications]
+      summary: Subscribe the current user to a channel of the notification
+      operationId: notificationsChannelsSubscribe
+      parameters:
+        - name: notification
+          in: path
+          required: true
+          description: Notification class name (URL-encoded).
+          schema:
+            type: string
+        - name: channel
+          in: path
+          required: true
+          description: Channel name.
+          schema:
+            type: string
+          example: telegram
+      responses:
+        '200':
+          description: Subscription with updated channel status.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Subscription'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableChannel'
+    delete:
+      tags: [notifications]
+      summary: Unsubscribe the current user from a channel of the notification
+      operationId: notificationsChannelsUnsubscribe
+      parameters:
+        - name: notification
+          in: path
+          required: true
+          description: Notification class name (URL-encoded).
+          schema:
+            type: string
+        - name: channel
+          in: path
+          required: true
+          description: Channel name.
+          schema:
+            type: string
+          example: mail
+      responses:
+        '200':
+          description: Subscription with updated channel status.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Subscription'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableChannel'
+
+components:
+  responses:
+    NotFound:
+      description: Resource not found (unknown notification, audience, ...).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnprocessableChannel:
+      description: The channel is not supported by the notification.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/Error'
+              - type: object
+                properties:
+                  errors:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items:
+                        type: string
+
+  schemas:
+    Response:
+      type: object
+      description: Envelope of the API response.
+      properties:
+        data:
+          description: Payload. A single resource or a list of resources.
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Not Found
+
+    Channel:
+      type: object
+      description: Channel definition.
+      properties:
+        name:
+          type: string
+          description: Channel name (mail, telegram, sms, ...).
+          example: mail
+        title:
+          type: string
+          example: E-mail
+        subtitle:
+          type: string
+          nullable: true
+          description: Channel description.
+        default:
+          type: boolean
+          description: Whether the channel is enabled by default.
+          example: true
+        forced:
+          type: boolean
+          description: Whether a user is forced to keep the default state.
+        hidden:
+          type: boolean
+          description: Whether the channel is hidden from the dashboard.
+        icon:
+          type: string
+          description: Bootstrap icon class.
+          example: bi bi-envelope
+        router:
+          type: string
+          nullable: true
+          description: URL where the user can enable a route for this channel.
+
+    ChannelState:
+      type: object
+      description: Channel definition with the status resolved for the current user.
+      allOf:
+        - $ref: '#/components/schemas/Channel'
+        - type: object
+          properties:
+            status:
+              type: boolean
+              description: Is the current user subscribed to this channel.
+            available:
+              type: boolean
+              description: Whether the user can receive this channel (a route exists, or the channel is broadcast).
+            previewing:
+              type: string
+              nullable: true
+              description: URL of the notification preview for this channel, when defined.
+
+    Group:
+      type: object
+      description: Subscription group.
+      properties:
+        shortcode:
+          type: string
+          description: Unique group shortcode (used for routing).
+        name:
+          type: string
+          description: Group title.
+          example: Daily
+        icon:
+          type: string
+          description: Bootstrap icon class.
+        fallback:
+          type: boolean
+          description: True for the implicit group of subscriptions without a group.
+        weight:
+          type: integer
+          description: Havier groups sink to the bottom of the list.
+
+    Audience:
+      type: object
+      description: Audience definition.
+      properties:
+        name:
+          type: string
+          description: Audience name.
+          example: everyone
+        title:
+          type: string
+          description: Audience human-readable title.
+          example: Everyone
+
+    Subscription:
+      type: object
+      description: Subscription definition with channels resolved for the current user.
+      properties:
+        groups:
+          type: array
+          description: Groups the subscription is attached to.
+          items:
+            $ref: '#/components/schemas/Group'
+        notification:
+          type: string
+          description: Notification class name.
+          example: App\Notifications\MyNotification
+        title:
+          type: string
+          description: Subscription human-readable title.
+          example: Digest
+        description:
+          type: string
+          nullable: true
+          description: Subscription description.
+        audiences:
+          type: array
+          description: Titles of audiences the subscription is scoped to.
+          items:
+            type: string
+          example: [Administration]
+        channels:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChannelState'

@@ -9,9 +9,12 @@ use Codewiser\Postie\Channel as ChannelDefinition;
  *
  * Applies the given flags to every listed channel.
  *
+ * Must be declared once. To configure channels individually,
+ * repeat the `Channel` attribute.
+ *
  * Not provided flags are inherited from a default channel (see PostieService::$channels).
  */
-#[\Attribute(\Attribute::TARGET_CLASS | \Attribute::IS_REPEATABLE)]
+#[\Attribute(\Attribute::TARGET_CLASS)]
 class Channels
 {
     /**

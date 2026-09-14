@@ -8,6 +8,7 @@ Postie is a dashboard where users can manage their subscription preferences.
     * [Channels](#channel-object)
     * [Groups](#grouping-subscriptions)
     * [Preview](#previewing-notifications)
+* [API](#api)
 
 Every `Notification` in the application has a corresponding audience.
 It doesn't mean that everyone in the audience will receive a notification,
@@ -84,10 +85,10 @@ class DailyNewsNotification extends Notification
 }
 ```
 
-> Class-level attributes are not inherited from a parent class: apply them 
-> to each Notification that must use them.
+Class-level attributes are not inherited from a parent class: apply them 
+to each Notification that must use them.
 
-This is a minimal setup. All of the following is mostly about making
+> This is a minimal setup. All of the following is mostly about making
 the Web panel beautiful.
 
 ### Subscription Object
@@ -223,6 +224,50 @@ class DailyNewsNotification extends Notification
     use Channelization;
 }
 ```
+
+#### Channel availability
+
+A channel is available to the user when the notifiable has a route to receive
+notifications through it. Availability is resolved by the
+`routeNotificationFor()` method — either a `routeNotificationFor{Channel}()`
+method on the notifiable.
+
+```php
+namespace App\Models;
+
+use Illuminate\Notifications\Notifiable;
+
+class User extends Authenticatable
+{
+    use Notifiable;
+
+    public function routeNotificationForTelegram(): ?string
+    {
+        return $this->telegram_chat_id;
+    }
+}
+```
+
+When a channel requires the user to enable a route (for example, connecting
+a messenger account), give the channel a router URL:
+
+```php
+use Codewiser\Postie\Channel;
+use Codewiser\Postie\PostieApplicationServiceProvider;
+
+class PostieServiceProvider extends PostieApplicationServiceProvider
+{
+    public function channels(): array
+    {
+        return [
+            Channel::via('telegram')->router(route('telegram.start_bot')),
+        ];
+    }
+}
+```
+
+Postie will provide a **Configure** screen to the dashboard, so the user can 
+enable it and start receiving notifications.
 
 ### Grouping Subscriptions
 
@@ -441,3 +486,41 @@ class DailyNewsNotification extends Notification
 
 Previews defined via the subscription `preview()` method take precedence
 over the `Preview` attribute.
+
+## API
+
+Postie ships a REST API. You may implement your own subscription management 
+system.
+
+The API is **not** registered by default — you include the routes yourself,
+so the core package stays free of any API footprint.
+
+### Routing setup
+
+Add a `register()` method to your `App\Providers\PostieServiceProvider`:
+
+```php
+use Illuminate\Support\Facades\Route;
+
+public function register(): void
+{
+    parent::register();
+
+    Route::group([
+        'domain'     => config('postie.domain', null),
+        'prefix'     => config('postie.path'),
+        'middleware' => ['api', 'auth:sanctum'],
+        'as'         => 'postie.',
+    ], function () {
+        $this->loadRoutesFrom(__DIR__.'/../../vendor/codewiser/postie/routes/api.php');
+    });
+}
+```
+
+### Documentation
+
+Interactive OpenAPI documentation (Redoc) is served alongside the dashboard,
+**without** any extra setup — the docs routes are part of the dashboard routes:
+
+* `GET /postie/api` — the Redoc page.
+* `GET /postie/api/openapi.yaml` — the OpenAPI specification itself.

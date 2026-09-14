@@ -6,7 +6,6 @@ use Codewiser\Postie\Traits\HasTitle;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Str;
 use Illuminate\Support\Traits\Conditionable;
 
 class Audience implements Arrayable
@@ -97,20 +96,11 @@ class Audience implements Arrayable
         return $this->name;
     }
 
-    /**
-     * Get audience unique shortcode (used for routing).
-     */
-    public function getShortcode(): string
-    {
-        return Str::substr(md5($this->getName()), 0, 4);
-    }
-
     public function toArray(): array
     {
         return [
-            'name'      => $this->getName(),
-            'title'     => $this->getTitle(),
-            'shortcode' => $this->getShortcode(),
+            'name'  => $this->getName(),
+            'title' => $this->getTitle(),
         ];
     }
 }

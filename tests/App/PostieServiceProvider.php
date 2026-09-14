@@ -12,9 +12,39 @@ use Codewiser\Postie\Tests\Fixtures\GroupedNotification;
 use Codewiser\Postie\Tests\Fixtures\PlainNotification;
 use Codewiser\Postie\Tests\Fixtures\ExampleNotification;
 use Codewiser\Postie\Tests\Fixtures\SecondExampleNotification;
+use Illuminate\Support\Facades\Route;
 
 class PostieServiceProvider extends PostieApplicationServiceProvider
 {
+    public function register(): void
+    {
+        parent::register();
+
+        $middlewares = config('postie.middleware', 'web');
+        if (! is_array($middlewares)) {
+            $middlewares = [$middlewares];
+        }
+
+        $auth = false;
+        foreach ($middlewares as $middleware) {
+            if ($middleware === 'auth' || str_starts_with($middleware, 'auth.')) {
+                $auth = true;
+            }
+        }
+        if (! $auth) {
+            $middlewares[] = 'auth';
+        }
+
+        Route::group([
+            'domain'     => config('postie.domain', null),
+            'prefix'     => config('postie.path'),
+            'middleware' => $middlewares,
+            'as'         => 'postie.',
+        ], function () {
+            $this->loadRoutesFrom(__DIR__.'/../../routes/api.php');
+        });
+    }
+
     public function channels(): array
     {
         return [

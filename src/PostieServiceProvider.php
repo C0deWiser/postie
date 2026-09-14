@@ -46,7 +46,11 @@ class PostieServiceProvider extends ServiceProvider
 
         $auth = false;
         foreach ($middlewares as $middleware) {
-            if ($middleware === 'auth' || str_starts_with($middleware, 'auth.')) {
+            if (
+                $middleware === 'auth' ||
+                str_starts_with($middleware, 'auth.') ||
+                str_starts_with($middleware, 'auth:')
+            ) {
                 $auth = true;
             }
         }
@@ -86,7 +90,7 @@ class PostieServiceProvider extends ServiceProvider
      */
     protected function defineAssetPublishing(): void
     {
-        $this->publishes([
+$this->publishes([
             POSTIE_PATH.'/public' => public_path('vendor/postie'),
         ], ['postie-assets', 'laravel-assets']);
     }
