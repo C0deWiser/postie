@@ -368,6 +368,10 @@ components:
           type: string
           nullable: true
           description: URL where the user can enable a route for this channel.
+        available:
+          type: boolean
+          description: Whether the current user can receive this channel (they have a route to it, or it is a broadcast channel).
+          example: true
 
     ChannelState:
       type: object

@@ -2,6 +2,7 @@
 
 namespace Codewiser\Postie\Tests;
 
+use Codewiser\Postie\Channel;
 use Codewiser\Postie\Group;
 use Codewiser\Postie\Models\Preference;
 use Codewiser\Postie\PostieService;
@@ -44,7 +45,9 @@ class ApiCrudTest extends TestCase
             ->assertOk()
             ->assertJsonCount(2, 'data')
             ->assertJsonPath('data.0.name', 'mail')
-            ->assertJsonPath('data.1.name', 'telegram');
+            ->assertJsonPath('data.0.available', true)
+            ->assertJsonPath('data.1.name', 'telegram')
+            ->assertJsonPath('data.1.available', true);
     }
 
     public function test_channels_show(): void
@@ -53,7 +56,8 @@ class ApiCrudTest extends TestCase
             ->getJson(route('postie.channels.show', ['channel' => 'mail']))
             ->assertOk()
             ->assertJsonPath('data.name', 'mail')
-            ->assertJsonPath('data.icon', 'bi bi-envelope');
+            ->assertJsonPath('data.icon', 'bi bi-envelope')
+            ->assertJsonPath('data.available', true);
     }
 
     public function test_channels_show_missing_returns_404(): void
@@ -61,6 +65,23 @@ class ApiCrudTest extends TestCase
         $this->actingAs($this->user)
             ->getJson(route('postie.channels.show', ['channel' => 'nope']))
             ->assertNotFound();
+    }
+
+    public function test_channels_unavailable_when_no_route(): void
+    {
+        PostieService::$channels = [
+            Channel::via('sms'),
+            Channel::via('broadcast'),
+        ];
+
+        $this->actingAs($this->user)
+            ->getJson(route('postie.channels.index'))
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.name', 'sms')
+            ->assertJsonPath('data.0.available', false)
+            ->assertJsonPath('data.1.name', 'broadcast')
+            ->assertJsonPath('data.1.available', true);
     }
 
     public function test_groups_index_lists_groups_for_user(): void
