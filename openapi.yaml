@@ -366,6 +366,7 @@ components:
           example: bi bi-envelope
         router:
           type: string
+          format: uri
           nullable: true
           description: URL where the user can enable a route for this channel.
         available:
@@ -388,6 +389,7 @@ components:
               description: Whether the user can receive this channel (a route exists, or the channel is broadcast).
             previewing:
               type: string
+              format: uri
               nullable: true
               description: URL of the notification preview for this channel, when defined.
 
